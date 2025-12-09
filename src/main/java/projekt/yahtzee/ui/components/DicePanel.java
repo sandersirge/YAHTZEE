@@ -8,7 +8,7 @@ import javafx.animation.ScaleTransition;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
 import javafx.geometry.Pos;
-import javafx.scene.control.CheckBox;
+import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
@@ -16,15 +16,20 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.util.Duration;
 import projekt.yahtzee.model.Die;
 import projekt.yahtzee.util.GameConstants;
 import projekt.yahtzee.controller.ui.ThemeController;
+import projekt.yahtzee.util.ResourceLoader;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -35,10 +40,14 @@ import java.util.Random;
  * @version 1.0
  */
 public class DicePanel {
+    private static final int DICE_FACE_COUNT = 6;
     private final ThemeController themeController;
     private final List<ImageView> diceImages;
-    private final List<CheckBox> keepCheckboxes;
+    private final List<Label> keepIndicators;
+    private final boolean[] keepSelected;
+    private final boolean[] keepDisabled;
     private final Random random;
+    private final Image[] diceImageCache;
     private int focusedDieIndex = -1;
     
     /**
@@ -50,8 +59,12 @@ public class DicePanel {
     public DicePanel(ThemeController themeController, List<Die> dice) {
         this.themeController = themeController;
         this.diceImages = new ArrayList<>();
-        this.keepCheckboxes = new ArrayList<>();
+        this.keepIndicators = new ArrayList<>();
+        this.keepSelected = new boolean[GameConstants.DICE_COUNT];
+        this.keepDisabled = new boolean[GameConstants.DICE_COUNT];
         this.random = new Random();
+        this.diceImageCache = new Image[7];
+        preloadDiceImages();
     }
     
     /**
@@ -77,26 +90,32 @@ public class DicePanel {
             diceImage.setFitWidth(GameConstants.DICE_IMAGE_SIZE);
             diceImage.setFitHeight(GameConstants.DICE_IMAGE_SIZE);
             diceImage.setPreserveRatio(true);
-            loadDiceImage(diceImage, 1); // Start with 1
+            diceImage.setPickOnBounds(true); // allow clicks on transparent area
+            diceImage.setCursor(Cursor.HAND);
+            setDiceImage(diceImage, 1); // Start with 1
+            final int index = i;
+            diceImage.setOnMouseClicked(event -> toggleKeep(index));
             diceImages.add(diceImage);
             diceContainer.getChildren().add(diceImage);
         }
         
-        // Create checkboxes
+        // Create selection indicators (labels that show a tick when selected)
         HBox checkboxContainer = new HBox();
         checkboxContainer.setAlignment(Pos.CENTER);
-        // Adjust spacing to align checkboxes under dice centers
-        // Dice are 125px wide with 40px spacing, checkboxes are ~20px wide
-        // 125 + 40 - 20 = 145
-        checkboxContainer.setSpacing(150);
+        // Adjust spacing to align indicators under dice centers.
+        checkboxContainer.setSpacing(GameConstants.SPACING_DICE_CHECKBOX_ROW);
         checkboxContainer.setPrefWidth(GameConstants.DICE_CONTAINER_WIDTH);
         checkboxContainer.setMinHeight(GameConstants.CHECKBOX_CONTAINER_HEIGHT);
         
         for (int i = 0; i < GameConstants.DICE_COUNT; i++) {
-            CheckBox checkbox = new CheckBox();
-            checkbox.setStyle(themeController.getCheckboxStyle());
-            keepCheckboxes.add(checkbox);
-            checkboxContainer.getChildren().add(checkbox);
+            Label indicator = new Label();
+            indicator.setStyle(themeController.getCheckboxStyle());
+            indicator.setFont(Font.font(GameConstants.FONT_FAMILY, 28));
+            indicator.setMinWidth(34);
+            indicator.setAlignment(Pos.CENTER);
+            indicator.setMouseTransparent(true); // indicators display state only
+            keepIndicators.add(indicator);
+            checkboxContainer.getChildren().add(indicator);
         }
         
         // Keep dice label
@@ -114,47 +133,43 @@ public class DicePanel {
         return dicePanel;
     }
     
-    /**
-     * Loads a resource as InputStream with fallback options.
-     */
-    private InputStream loadResource(String path) {
-        InputStream stream = getClass().getResourceAsStream(path);
-        if (stream != null) return stream;
-        
-        String pathWithoutSlash = path.startsWith("/") ? path.substring(1) : path;
-        stream = getClass().getClassLoader().getResourceAsStream(pathWithoutSlash);
-        if (stream != null) return stream;
-        
-        stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(pathWithoutSlash);
-        if (stream != null) return stream;
-        
-        throw new RuntimeException("Resource not found: " + path);
+    private void preloadDiceImages() {
+        for (int value = 1; value <= DICE_FACE_COUNT; value++) {
+            diceImageCache[value] = loadDiceImage(value);
+        }
     }
-    
+
+    private void setDiceImage(ImageView imageView, int value) {
+        if (value < 1 || value > DICE_FACE_COUNT) {
+            throw new IllegalArgumentException("Dice value out of range: " + value);
+        }
+        Image cachedImage = diceImageCache[value];
+        if (cachedImage == null) {
+            cachedImage = loadDiceImage(value);
+            diceImageCache[value] = cachedImage;
+        }
+        imageView.setImage(cachedImage);
+    }
+
     /**
      * Loads a dice image for a specific value.
      * 
      * @param imageView the ImageView to load the image into
      * @param value the dice value (1-6)
      */
-    private void loadDiceImage(ImageView imageView, int value) {
+    private Image loadDiceImage(int value) {
         try {
             String imagePath = GameConstants.getDiceImagePath(value);
-            // Try loading with getClass().getResource() first
             URL imageUrl = getClass().getResource(imagePath);
             if (imageUrl != null) {
-                Image image = new Image(imageUrl.toExternalForm());
-                imageView.setImage(image);
-            } else {
-                // Fallback: try with InputStream
-                InputStream imageStream = loadResource(imagePath);
-                Image image = new Image(imageStream);
-                imageView.setImage(image);
-                imageStream.close();
+                return new Image(imageUrl.toExternalForm());
             }
-        } catch (Exception e) {
-            System.err.println("Error loading dice image: " + e.getMessage());
-            e.printStackTrace();
+
+            try (InputStream imageStream = ResourceLoader.openResourceStream(imagePath)) {
+                return new Image(imageStream);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error loading dice image for value " + value, e);
         }
     }
     
@@ -165,7 +180,7 @@ public class DicePanel {
      */
     public void updateDiceImages(List<Integer> values) {
         for (int i = 0; i < Math.min(values.size(), diceImages.size()); i++) {
-            loadDiceImage(diceImages.get(i), values.get(i));
+            setDiceImage(diceImages.get(i), values.get(i));
         }
     }
     
@@ -196,7 +211,7 @@ public class DicePanel {
                             if (kept[i] == 1) continue; // Skip kept dice during animation
                             value = random.nextInt(6) + 1;
                         }
-                        loadDiceImage(diceImages.get(i), value);
+                        setDiceImage(diceImages.get(i), value);
                     }
                 }
             );
@@ -251,8 +266,8 @@ public class DicePanel {
      * 
      * @return list of checkboxes
      */
-    public List<CheckBox> getKeepCheckboxes() {
-        return keepCheckboxes;
+    public List<Label> getKeepIndicators() {
+        return keepIndicators;
     }
     
     /**
@@ -262,8 +277,8 @@ public class DicePanel {
      */
     public int[] getKeepStatus() {
         int[] kept = new int[GameConstants.DICE_COUNT];
-        for (int i = 0; i < keepCheckboxes.size(); i++) {
-            kept[i] = keepCheckboxes.get(i).isSelected() ? 1 : 0;
+        for (int i = 0; i < keepIndicators.size(); i++) {
+            kept[i] = keepSelected[i] ? 1 : 0;
         }
         return kept;
     }
@@ -272,8 +287,9 @@ public class DicePanel {
      * Resets all checkboxes to unchecked.
      */
     public void resetCheckboxes() {
-        for (CheckBox checkbox : keepCheckboxes) {
-            checkbox.setSelected(false);
+        for (int i = 0; i < keepSelected.length; i++) {
+            keepSelected[i] = false;
+            updateIndicatorVisual(i);
         }
         refreshDiceEffects();
     }
@@ -284,10 +300,12 @@ public class DicePanel {
      * @param disabled true to disable checkboxes, false to enable them
      */
     public void setCheckboxesDisabled(boolean disabled) {
-        for (CheckBox checkbox : keepCheckboxes) {
-            checkbox.setDisable(disabled);
+        for (int i = 0; i < keepDisabled.length; i++) {
+            keepDisabled[i] = disabled;
+            updateIndicatorDisabledState(i);
         }
         refreshDiceEffects();
+        updateDiceCursors(disabled);
     }
     
     /**
@@ -312,33 +330,54 @@ public class DicePanel {
     }
 
     public void toggleKeep(int index) {
-        if (index < 0 || index >= keepCheckboxes.size()) {
+        if (index < 0 || index >= keepIndicators.size()) {
             return;
         }
-        if (keepCheckboxes.get(index).isDisable()) {
+        if (keepDisabled[index]) {
             return;
         }
-        keepCheckboxes.get(index).setSelected(!keepCheckboxes.get(index).isSelected());
+        keepSelected[index] = !keepSelected[index];
+        updateIndicatorVisual(index);
         refreshDiceEffects();
     }
 
     public void setKeepSelected(int index, boolean selected) {
-        if (index < 0 || index >= keepCheckboxes.size()) {
+        if (index < 0 || index >= keepIndicators.size()) {
             return;
         }
-        keepCheckboxes.get(index).setSelected(selected);
+        keepSelected[index] = selected;
+        updateIndicatorVisual(index);
         refreshDiceEffects();
     }
 
     public boolean isKeepSelected(int index) {
-        if (index < 0 || index >= keepCheckboxes.size()) {
+        if (index < 0 || index >= keepIndicators.size()) {
             return false;
         }
-        return keepCheckboxes.get(index).isSelected();
+        return keepSelected[index];
     }
 
     public boolean areCheckboxesDisabled() {
-        return keepCheckboxes.stream().allMatch(CheckBox::isDisable);
+        for (boolean disabled : keepDisabled) {
+            if (!disabled) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void syncKeepSelections(Map<Integer, Integer> keptValueCounts, List<Integer> sortedValues) {
+        Arrays.fill(keepSelected, false);
+        for (int i = 0; i < sortedValues.size() && i < keepSelected.length; i++) {
+            int value = sortedValues.get(i);
+            int remaining = keptValueCounts.getOrDefault(value, 0);
+            if (remaining > 0) {
+                keepSelected[i] = true;
+                keptValueCounts.put(value, remaining - 1);
+            }
+            updateIndicatorVisual(i);
+        }
+        refreshDiceEffects();
     }
 
     private void refreshDiceEffects() {
@@ -347,7 +386,7 @@ public class DicePanel {
             imageView.setEffect(null);
 
             DropShadow base = null;
-            if (keepCheckboxes.get(i).isSelected()) {
+            if (keepSelected[i]) {
                 base = createShadow(Color.web("#66BB6A"), 18);
             }
 
@@ -369,5 +408,24 @@ public class DicePanel {
         shadow.setRadius(radius);
         shadow.setSpread(0.6);
         return shadow;
+    }
+
+    private void updateIndicatorVisual(int index) {
+        Label indicator = keepIndicators.get(index);
+        indicator.setText(keepSelected[index] ? "✓" : "");
+        indicator.setTextFill(Color.web(themeController.isDarkTheme() ? "#FFFFFF" : "#263238"));
+    }
+
+    private void updateIndicatorDisabledState(int index) {
+        Label indicator = keepIndicators.get(index);
+        indicator.setDisable(keepDisabled[index]);
+        indicator.setOpacity(keepDisabled[index] ? 0.5 : 1.0);
+    }
+
+    private void updateDiceCursors(boolean disabled) {
+        Cursor cursor = disabled ? Cursor.DEFAULT : Cursor.HAND;
+        for (ImageView imageView : diceImages) {
+            imageView.setCursor(cursor);
+        }
     }
 }

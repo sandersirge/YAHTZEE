@@ -43,3 +43,8 @@ bin/
 
 ### PowerShell ###
 *.ps1
+
+### Temporary text artifacts ###
+# Ignore all .txt files anywhere; these are generated at runtime (e.g., settings/results).
+*.txt
+**/*.txt

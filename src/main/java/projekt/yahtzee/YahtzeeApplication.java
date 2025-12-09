@@ -24,7 +24,7 @@ public class YahtzeeApplication extends Application {
 
         sceneManager = new SceneManager(primaryStage, themeController, soundController, statisticsController);
 
-        primaryStage.setTitle("Yahtzee tĆ¤ringumĆ¤ng");
+        primaryStage.setTitle("Yahtzee täringumäng");
         primaryStage.setResizable(true);
 
         soundController.startMenuMusic();

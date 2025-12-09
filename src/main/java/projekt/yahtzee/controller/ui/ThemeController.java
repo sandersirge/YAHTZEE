@@ -3,17 +3,16 @@ package projekt.yahtzee.controller.ui;
 import projekt.yahtzee.util.GameConstants;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.PrintWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Manages the application theme (light or dark) and persists the selection in settings.txt.
  */
 public class ThemeController {
-    private static final String SETTINGS_FILE = "settings.txt";
-    
     public enum Theme {
         LIGHT, DARK
     }
@@ -24,37 +23,56 @@ public class ThemeController {
         loadTheme();
     }
     
+    private Path resolveSettingsPath() {
+        return Paths.get(GameConstants.SETTINGS_FILE);
+    }
+    
     /**
      * Loads the theme from the settings file.
      */
     private void loadTheme() {
-        try {
-            File file = new File(SETTINGS_FILE);
-            if (file.exists()) {
-                try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                    String line = reader.readLine();
-                    if (line != null && line.startsWith("THEME=")) {
-                        String themeName = line.substring(6);
-                        currentTheme = Theme.valueOf(themeName);
-                        return;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Failed to load theme: " + e.getMessage());
+        Path settingsPath = resolveSettingsPath();
+        if (!Files.exists(settingsPath)) {
+            currentTheme = Theme.LIGHT;
+            return;
         }
-        // Default to light theme when no persisted value exists.
-        currentTheme = Theme.LIGHT;
+
+        try (BufferedReader reader = Files.newBufferedReader(settingsPath, StandardCharsets.UTF_8)) {
+            String line = reader.readLine();
+            Theme persistedTheme = parseTheme(line);
+            currentTheme = persistedTheme != null ? persistedTheme : Theme.LIGHT;
+        } catch (IOException e) {
+            System.err.println("Failed to load theme from " + settingsPath + ": " + e.getMessage());
+            currentTheme = Theme.LIGHT;
+        }
     }
     
     /**
      * Persists the current theme to the settings file.
      */
     private void saveTheme() {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(SETTINGS_FILE))) {
-            writer.println("THEME=" + currentTheme.name());
-        } catch (Exception e) {
-            System.err.println("Failed to save theme: " + e.getMessage());
+        Path settingsPath = resolveSettingsPath();
+        Path parent = settingsPath.getParent();
+        try {
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+            Files.writeString(settingsPath, "THEME=" + currentTheme.name(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            System.err.println("Failed to save theme to " + settingsPath + ": " + e.getMessage());
+        }
+    }
+
+    private Theme parseTheme(String line) {
+        if (line == null || !line.startsWith("THEME=")) {
+            return null;
+        }
+
+        String themeName = line.substring(6);
+        try {
+            return Theme.valueOf(themeName);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
     

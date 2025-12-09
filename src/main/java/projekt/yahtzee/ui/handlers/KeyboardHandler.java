@@ -11,6 +11,7 @@ import projekt.yahtzee.controller.ui.ScoreboardController;
 import projekt.yahtzee.controller.ui.SoundController;
 import projekt.yahtzee.controller.ui.ThemeController;
 import projekt.yahtzee.ui.components.DicePanel;
+import projekt.yahtzee.ui.dialogs.ExitDialog;
 import projekt.yahtzee.ui.dialogs.HelpDialog;
 
 import java.util.List;
@@ -43,6 +44,10 @@ public class KeyboardHandler {
         "ESC - open the exit dialog"
     );
 
+    public static List<String> getHelpShortcutLines() {
+        return HELP_SHORTCUT_LINES;
+    }
+
     private static final Map<KeyCode, Integer> SCORE_SHORTCUTS = Map.ofEntries(
         Map.entry(KeyCode.DIGIT1, 1),
         Map.entry(KeyCode.NUMPAD1, 1),
@@ -70,6 +75,9 @@ public class KeyboardHandler {
         Map.entry(KeyCode.ADD, 14),
         Map.entry(KeyCode.BACK_SPACE, 15)
     );
+
+    private static final AtomicReference<Stage> HELP_DIALOG_STAGE = new AtomicReference<>();
+    private static final AtomicReference<Stage> EXIT_DIALOG_STAGE = new AtomicReference<>();
 
     /**
      * Wires keyboard controls for the in-game scene.
@@ -106,7 +114,6 @@ public class KeyboardHandler {
         AtomicBoolean scoreboardFocusActive = new AtomicBoolean(false);
         AtomicInteger focusedScoreRow = new AtomicInteger(-1);
         AtomicInteger lastDiceFocusIndex = new AtomicInteger(-1);
-        AtomicReference<Stage> helpDialogStage = new AtomicReference<>();
 
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             int activePlayerIndex = playerTurnCounter.get();
@@ -141,22 +148,16 @@ public class KeyboardHandler {
 
             switch (code) {
                 case ESCAPE:
-                    if (exitButton != null) {
-                        exitButton.fire();
-                        event.consume();
-                    }
+                    toggleExitDialog(ownerStage, themeController, soundController, () -> {
+                        if (exitButton != null) {
+                            exitButton.fire();
+                        }
+                    });
+                    event.consume();
                     break;
 
                 case H:
-                    Stage existingHelp = helpDialogStage.get();
-                    if (existingHelp != null && existingHelp.isShowing()) {
-                        existingHelp.close();
-                        helpDialogStage.compareAndSet(existingHelp, null);
-                    } else if (ownerStage != null && themeController != null && soundController != null) {
-                        Stage newHelp = HelpDialog.show(ownerStage, themeController, soundController, HELP_SHORTCUT_LINES);
-                        helpDialogStage.set(newHelp);
-                        newHelp.setOnHidden(e -> helpDialogStage.compareAndSet(newHelp, null));
-                    }
+                    toggleHelpDialog(ownerStage, themeController, soundController);
                     event.consume();
                     break;
 
@@ -189,6 +190,37 @@ public class KeyboardHandler {
                     break;
             }
         });
+    }
+
+    public static void toggleHelpDialog(Stage ownerStage,
+                                        ThemeController themeController,
+                                        SoundController soundController) {
+        Stage existing = HELP_DIALOG_STAGE.get();
+        if (existing != null && existing.isShowing()) {
+            existing.close();
+            HELP_DIALOG_STAGE.compareAndSet(existing, null);
+            return;
+        }
+        if (ownerStage == null || themeController == null || soundController == null) return;
+        Stage newHelp = HelpDialog.show(ownerStage, themeController, soundController, HELP_SHORTCUT_LINES);
+        HELP_DIALOG_STAGE.set(newHelp);
+        newHelp.setOnHidden(e -> HELP_DIALOG_STAGE.compareAndSet(newHelp, null));
+    }
+
+    public static void toggleExitDialog(Stage ownerStage,
+                                        ThemeController themeController,
+                                        SoundController soundController,
+                                        Runnable onExit) {
+        Stage existing = EXIT_DIALOG_STAGE.get();
+        if (existing != null && existing.isShowing()) {
+            existing.close();
+            EXIT_DIALOG_STAGE.compareAndSet(existing, null);
+            return;
+        }
+        if (ownerStage == null || themeController == null || soundController == null) return;
+        Stage dialog = ExitDialog.show(ownerStage, themeController, soundController, onExit);
+        EXIT_DIALOG_STAGE.set(dialog);
+        dialog.setOnHidden(e -> EXIT_DIALOG_STAGE.compareAndSet(dialog, null));
     }
 
     private static boolean handleScoreboardKey(KeyEvent event,

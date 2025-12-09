@@ -15,116 +15,110 @@ import projekt.yahtzee.ui.dialogs.GameEndDialog;
 import projekt.yahtzee.util.GameConstants;
 
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Handles scoreboard cell click and hover interactions.
  */
 public class ScoreCellHandler {
-    
+    private static final int[] NON_INTERACTIVE_ROWS = {0, 7, 8, 16, 17};
+
+    private ScoreCellHandler() {
+        throw new IllegalStateException("Utility class");
+    }
+
+    public static boolean isNonInteractiveRow(int uiIndex) {
+        for (int row : NON_INTERACTIVE_ROWS) {
+            if (row == uiIndex) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Wires click handlers for every scoreboard cell and resolves scoring actions.
      *
-     * @param mängijateVeerud scoreboard columns per player
-     * @param kasVeeretatudMängijal tracking list marking used combinations
-     * @param mängijaKordadeLoendur index of the active player
-     * @param väärtused current dice values
+    * @param playerColumns scoreboard columns per player
+    * @param playerUsedCombinations tracking list marking used combinations
+    * @param activePlayerIndex index of the active player
+    * @param diceValues current dice values
      * @param gameController controller managing game logic
      * @param scoreboardController controller rendering scoreboard updates
      * @param dicePanel dice panel component
-     * @param veeretusLoendur roll counter label
-     * @param teavitused status label for user messages
-     * @param pealava primary stage
+     * @param rollCounterLabel roll counter label
+     * @param statusLabel status label for user messages
+     * @param primaryStage primary stage
      * @param themeController controller providing styles
      * @param soundController controller playing sound effects
      * @param statisticsController controller updating statistics
      * @param onGameEnd callback fired when the game finishes
      */
     public static void setupClickHandlers(
-            List<List<Label>> mängijateVeerud,
-            List<List<Integer>> kasVeeretatudMängijal,
-            AtomicInteger mängijaKordadeLoendur,
-            List<Integer> väärtused,
+            List<List<Label>> playerColumns,
+            List<List<Integer>> playerUsedCombinations,
+            AtomicInteger activePlayerIndex,
+            List<Integer> diceValues,
             GameController gameController,
             ScoreboardController scoreboardController,
             DicePanel dicePanel,
-            Label veeretusLoendur,
-            Label teavitused,
-            Stage pealava,
+            Label rollCounterLabel,
+            Label statusLabel,
+            Stage primaryStage,
             ThemeController themeController,
             SoundController soundController,
             StatisticsController statisticsController,
             Runnable onGameEnd) {
         
         // Attach click handlers to each player header cell.
-        for (List<Label> mängijaVeerg : mängijateVeerud) {
-            Label nimiLahter = mängijaVeerg.get(0);
-            nimiLahter.setOnMouseClicked(e -> {
+        for (List<Label> playerColumn : playerColumns) {
+            Label nameCell = playerColumn.get(0);
+            nameCell.setOnMouseClicked(e -> {
                 // Play either the pan-hit or bonk sound at random.
-                Random random = new Random();
-                if (random.nextBoolean()) {
-                    if (soundController.getPanHitSound() != null) {
-                        soundController.getPanHitSound().stop();
-                        soundController.getPanHitSound().play();
-                    }
-                } else {
-                    if (soundController.getBonkSound() != null) {
-                        soundController.getBonkSound().stop();
-                        soundController.getBonkSound().play();
-                    }
-                }
+                soundController.playRandomPlayerNameClickSound();
             });
         }
         
         // Attach click handlers to the scoreboard cells.
-        for (int playerIndex = 0; playerIndex < mängijateVeerud.size(); playerIndex++) {
-            final List<Label> mängijaVeerg = mängijateVeerud.get(playerIndex);
-            
-            for (int cellIndex = 0; cellIndex < mängijaVeerg.size(); cellIndex++) {
-                Label punktiLahter = mängijaVeerg.get(cellIndex);
+        for (int playerIndex = 0; playerIndex < playerColumns.size(); playerIndex++) {
+            final List<Label> playerColumn = playerColumns.get(playerIndex);
+
+            for (int cellIndex = 0; cellIndex < playerColumn.size(); cellIndex++) {
+                Label scoreCell = playerColumn.get(cellIndex);
                 final int uiIndex = cellIndex;
                 
                 // Skip header and calculated rows, but add vine-boom click handler
-                if (uiIndex == 0 || uiIndex == 7 || uiIndex == 8 || uiIndex == 16 || uiIndex == 17) {
+                if (isNonInteractiveRow(uiIndex)) {
                     // Add the vine boom sound to non-interactive rows except the header.
                     if (uiIndex != 0) {
-                        punktiLahter.setOnMouseClicked(e -> {
-                            if (soundController.getVineBoomSound() != null) {
-                                soundController.getVineBoomSound().stop();
-                                soundController.getVineBoomSound().play();
-                            }
+                        scoreCell.setOnMouseClicked(e -> {
+                            soundController.playClip(soundController.getVineBoomSound());
                         });
                     }
                     continue;
                 }
                 
-                punktiLahter.setCursor(Cursor.HAND);
-                punktiLahter.setOnMouseClicked(actionEvent -> {
-                    int currentPlayerIdx = mängijaKordadeLoendur.get();
-                    if (currentPlayerIdx < 0 || currentPlayerIdx >= mängijateVeerud.size()) {
+                scoreCell.setCursor(Cursor.HAND);
+                scoreCell.setOnMouseClicked(actionEvent -> {
+                    int currentPlayerIdx = activePlayerIndex.get();
+                    if (currentPlayerIdx < 0 || currentPlayerIdx >= playerColumns.size()) {
                         return;
                     }
-                    List<Label> aktiivseMängijaVeerg = mängijateVeerud.get(currentPlayerIdx);
+                    List<Label> activePlayerColumn = playerColumns.get(currentPlayerIdx);
+                    List<Integer> activePlayerCombos = playerUsedCombinations.get(currentPlayerIdx);
                     
                     // Only allow clicks on active player's cells
-                    if (mängijaVeerg != aktiivseMängijaVeerg) {
+                    if (playerColumn != activePlayerColumn) {
                         // Play the "ah hell nah" clip.
-                        if (soundController.getInvalidClickSound() != null) {
-                            soundController.getInvalidClickSound().stop();
-                            soundController.getInvalidClickSound().play();
-                        }
+                        soundController.playClip(soundController.getInvalidClickSound());
                         return;
                     }
                     
                     // Prevent clicking before first roll
                     if (gameController.getCurrentRollCount() == 0) {
                         // Play the violin screech clip.
-                        if (soundController.getViolinScreechSound() != null) {
-                            soundController.getViolinScreechSound().stop();
-                            soundController.getViolinScreechSound().play();
-                        }
-                        teavitused.setText("Veereta kõigepealt täringuid!");
+                        soundController.playClip(soundController.getViolinScreechSound());
+                        statusLabel.setText("Veereta kõigepealt täringuid!");
                         return;
                     }
                     
@@ -139,78 +133,59 @@ public class ScoreCellHandler {
                     }
                     
                     // Prevent clicks on already used combinations.
-                    if (kasVeeretatudMängijal.get(mängijaKordadeLoendur.get()).get(uiIndex) == 1) {
+                    if (activePlayerCombos.get(uiIndex) == 1) {
                         // Play the violin screech clip.
-                        if (soundController.getViolinScreechSound() != null) {
-                            soundController.getViolinScreechSound().stop();
-                            soundController.getViolinScreechSound().play();
-                        }
+                        soundController.playClip(soundController.getViolinScreechSound());
                         return;
                     }
                     
-                    Player currentPlayer = gameController.getPlayers().get(mängijaKordadeLoendur.get());
-                    int earnedPoints = gameController.saveScore(comboIndex, väärtused);
+                    Player currentPlayer = gameController.getPlayers().get(currentPlayerIdx);
+                    int earnedPoints = gameController.saveScore(comboIndex, diceValues);
                     
                     // Choose an appropriate sound effect based on the score.
                     if (earnedPoints > 0) {
                         // Positive score: play the ding sound.
-                        if (soundController.getDingSound() != null) {
-                            soundController.getDingSound().stop();
-                            soundController.getDingSound().play();
-                        }
+                        soundController.playClip(soundController.getDingSound());
                     } else {
                         // Zero score: play one of the SpongeBob clips at random.
-                        Random random = new Random();
-                        if (random.nextBoolean()) {
-                            if (soundController.getSpongebobBoowompSound() != null) {
-                                soundController.getSpongebobBoowompSound().stop();
-                                soundController.getSpongebobBoowompSound().play();
-                            }
-                        } else {
-                            if (soundController.getSpongebobFailSound() != null) {
-                                soundController.getSpongebobFailSound().stop();
-                                soundController.getSpongebobFailSound().play();
-                            }
+                        soundController.playRandomZeroScoreSound();
+                    }
+                    
+                    activePlayerCombos.set(uiIndex, 1);
+                    
+                    // Clear preview scores using index-based access to avoid repeated lookups.
+                    for (int labelIndex = 0; labelIndex < activePlayerColumn.size(); labelIndex++) {
+                        if (isNonInteractiveRow(labelIndex)) {
+                            continue;
+                        }
+                        if (labelIndex != uiIndex && activePlayerCombos.get(labelIndex) == 0) {
+                            activePlayerColumn.get(labelIndex).setText(GameConstants.SCORE_PLACEHOLDER);
                         }
                     }
                     
-                    kasVeeretatudMängijal.get(mängijaKordadeLoendur.get()).set(uiIndex, 1);
-                    
-                    // Clear preview scores
-                    for (Label label : aktiivseMängijaVeerg) {
-                        int labelIndex = aktiivseMängijaVeerg.indexOf(label);
-                        if (labelIndex != 0 && labelIndex != 7 && labelIndex != 8 && 
-                            labelIndex != 16 && labelIndex != 17) {
-                            if (labelIndex != uiIndex && 
-                                kasVeeretatudMängijal.get(mängijaKordadeLoendur.get()).get(labelIndex) == 0) {
-                                label.setText(GameConstants.SCORE_PLACEHOLDER);
-                            }
-                        }
-                    }
-                    
-                    punktiLahter.setText(earnedPoints == 0 ? GameConstants.SCORE_INVALID : String.valueOf(earnedPoints));
+                    scoreCell.setText(earnedPoints == 0 ? GameConstants.SCORE_INVALID : String.valueOf(earnedPoints));
                     
                     // Visual highlight for the selected cell.
-                    punktiLahter.setStyle(themeController.getScoreCellSelectedStyle());
+                    scoreCell.setStyle(themeController.getScoreCellSelectedStyle());
                     PauseTransition pause = new PauseTransition(Duration.seconds(1));
-                    pause.setOnFinished(ev -> punktiLahter.setStyle(themeController.getScoreCellUsedStyle()));
+                    pause.setOnFinished(ev -> scoreCell.setStyle(themeController.getScoreCellUsedStyle()));
                     pause.play();
                     
                     // Update sums and totals
-                    aktiivseMängijaVeerg.get(8).setText(String.valueOf(currentPlayer.getUpperSectionScore()));
+                    activePlayerColumn.get(8).setText(String.valueOf(currentPlayer.getUpperSectionScore()));
                     
-                    if (currentPlayer.isUpperSectionBonusAwarded() && aktiivseMängijaVeerg.get(7).getText().equals(GameConstants.SCORE_PLACEHOLDER)) {
-                        aktiivseMängijaVeerg.get(7).setText("35");
+                    if (currentPlayer.isUpperSectionBonusAwarded() && activePlayerColumn.get(7).getText().equals(GameConstants.SCORE_PLACEHOLDER)) {
+                        activePlayerColumn.get(7).setText("35");
                     }
                     
-                    aktiivseMängijaVeerg.get(16).setText(String.valueOf(currentPlayer.getLowerSectionScore()));
-                    aktiivseMängijaVeerg.get(17).setText(String.valueOf(currentPlayer.getTotalScore()));
+                    activePlayerColumn.get(16).setText(String.valueOf(currentPlayer.getLowerSectionScore()));
+                    activePlayerColumn.get(17).setText(String.valueOf(currentPlayer.getTotalScore()));
                     
                     // Check if the game is finished.
                     if (gameController.isGameFinished()) {
                         GameEndDialog endDialog = new GameEndDialog(
-                            pealava, themeController, soundController, statisticsController, gameController, onGameEnd);
-                        endDialog.handleGameEnd(teavitused);
+                            primaryStage, themeController, soundController, statisticsController, gameController, onGameEnd);
+                        endDialog.handleGameEnd(statusLabel);
                         return;
                     }
                     
@@ -219,17 +194,17 @@ public class ScoreCellHandler {
                     gameController.nextPlayer();
                     
                     // Increment and wrap around if needed.
-                    int nextPlayerIndex = (mängijaKordadeLoendur.get() + 1) % gameController.getPlayers().size();
-                    mängijaKordadeLoendur.set(nextPlayerIndex);
+                    int nextPlayerIndex = (currentPlayerIdx + 1) % gameController.getPlayers().size();
+                    activePlayerIndex.set(nextPlayerIndex);
                     
                     // Highlight the new active player.
-                    scoreboardController.highlightPlayer(mängijaKordadeLoendur.get());
+                    scoreboardController.highlightPlayer(activePlayerIndex.get());
                     
-                    veeretusLoendur.setText("0/3");
-                    int playerNum = mängijaKordadeLoendur.get() + 1;
-                    String playerName = gameController.getPlayers().get(mängijaKordadeLoendur.get()).getPlayerName();
-                    teavitused.setText(playerNum + ". mängija - " + playerName + " kord!\n\nVeereta täringuid alustamiseks!");
-                    väärtused.clear();
+                    rollCounterLabel.setText("0/3");
+                    int playerNum = activePlayerIndex.get() + 1;
+                    String playerName = gameController.getPlayers().get(activePlayerIndex.get()).getPlayerName();
+                    statusLabel.setText(playerNum + ". mängija - " + playerName + " kord!\n\nVeereta täringuid alustamiseks!");
+                    diceValues.clear();
                     dicePanel.updateDiceImages(List.of(1, 1, 1, 1, 1));
                     dicePanel.resetCheckboxes(); // Reset for new player turn
                     dicePanel.setCheckboxesDisabled(true); // Disable until first roll
@@ -243,76 +218,76 @@ public class ScoreCellHandler {
     /**
      * Wires hover effects for scoreboard cells to reflect interactivity and state.
      *
-     * @param mängijateVeerud scoreboard columns per player
-     * @param kasVeeretatudMängijal tracking list marking used combinations
-     * @param mängijaKordadeLoendur index of the active player
+    * @param playerColumns scoreboard columns per player
+    * @param playerUsedCombinations tracking list marking used combinations
+    * @param activePlayerIndex index of the active player
      * @param themeController controller providing styles
      */
     public static void setupHoverEffects(
-            List<List<Label>> mängijateVeerud,
-            List<List<Integer>> kasVeeretatudMängijal,
-            AtomicInteger mängijaKordadeLoendur,
+            List<List<Label>> playerColumns,
+            List<List<Integer>> playerUsedCombinations,
+            AtomicInteger activePlayerIndex,
             ThemeController themeController) {
         
-        for (int playerIndex = 0; playerIndex < mängijateVeerud.size(); playerIndex++) {
-            final List<Label> mängijaVeerg = mängijateVeerud.get(playerIndex);
-            
-            for (int cellIndex = 0; cellIndex < mängijaVeerg.size(); cellIndex++) {
-                Label punktiLahter = mängijaVeerg.get(cellIndex);
+        for (int playerIndex = 0; playerIndex < playerColumns.size(); playerIndex++) {
+            final List<Label> playerColumn = playerColumns.get(playerIndex);
+            final List<Integer> columnCombos = playerUsedCombinations.get(playerIndex);
+
+            for (int cellIndex = 0; cellIndex < playerColumn.size(); cellIndex++) {
+                Label scoreCell = playerColumn.get(cellIndex);
                 final int uiIndex = cellIndex;
                 
                 // Skip header and calculated rows
-                if (uiIndex == 0 || uiIndex == 7 || uiIndex == 8 || uiIndex == 16 || uiIndex == 17) {
+                if (isNonInteractiveRow(uiIndex)) {
                     continue;
                 }
                 
-                punktiLahter.setOnMouseEntered(e -> {
-                    int currentPlayerIdx = mängijaKordadeLoendur.get();
-                    if (currentPlayerIdx < 0 || currentPlayerIdx >= mängijateVeerud.size()) {
+                scoreCell.setOnMouseEntered(e -> {
+                    int currentPlayerIdx = activePlayerIndex.get();
+                    if (currentPlayerIdx < 0 || currentPlayerIdx >= playerColumns.size()) {
                         return;
                     }
-                    List<Label> aktiivseMängijaVeerg = mängijateVeerud.get(currentPlayerIdx);
-                    boolean onAktiivseMängijaVeerg = (mängijaVeerg == aktiivseMängijaVeerg);
-                    int currentVeergIndex = mängijateVeerud.indexOf(mängijaVeerg);
+                    List<Label> activePlayerColumn = playerColumns.get(currentPlayerIdx);
+                    boolean isActivePlayerColumn = (playerColumn == activePlayerColumn);
                     
                     // All score cells on active player - use same hover style
-                    if (onAktiivseMängijaVeerg) {
+                    if (isActivePlayerColumn) {
                         // Check if this cell is currently selected (highlighted with border)
-                        if (punktiLahter.getStyle().contains("border-width: 2")) {
-                            punktiLahter.setStyle(themeController.getScoreCellSelectedHoverStyle());
-                            punktiLahter.setCursor(Cursor.CLOSED_HAND);
+                        if (scoreCell.getStyle().contains("border-width: 2")) {
+                            scoreCell.setStyle(themeController.getScoreCellSelectedHoverStyle());
+                            scoreCell.setCursor(Cursor.CLOSED_HAND);
                         } 
                         // Used cells - show closed hand
-                        else if (kasVeeretatudMängijal.get(currentVeergIndex).get(uiIndex) == 1) {
-                            punktiLahter.setStyle(themeController.getScoreCellHoverStyle());
-                            punktiLahter.setCursor(Cursor.CLOSED_HAND);
+                        else if (columnCombos.get(uiIndex) == 1) {
+                            scoreCell.setStyle(themeController.getScoreCellHoverStyle());
+                            scoreCell.setCursor(Cursor.CLOSED_HAND);
                         }
                         // Unused cells - clickable with hand cursor
                         else {
-                            punktiLahter.setStyle(themeController.getScoreCellHoverStyle());
-                            punktiLahter.setCursor(Cursor.HAND);
+                            scoreCell.setStyle(themeController.getScoreCellHoverStyle());
+                            scoreCell.setCursor(Cursor.HAND);
                         }
                     }
                     // Inactive player's cells or used cells - closed hand cursor
                     else {
-                        punktiLahter.setCursor(Cursor.CLOSED_HAND);
+                        scoreCell.setCursor(Cursor.CLOSED_HAND);
                     }
                 });
                 
-                punktiLahter.setOnMouseExited(e -> {
-                    int currentVeergIndex = mängijateVeerud.indexOf(mängijaVeerg);
-                    punktiLahter.setCursor(Cursor.DEFAULT);
+                scoreCell.setOnMouseExited(e -> {
+                    scoreCell.setCursor(Cursor.DEFAULT);
                     
                     // Already used combinations - restore used style
-                    if (kasVeeretatudMängijal.get(currentVeergIndex).get(uiIndex) == 1) {
-                        punktiLahter.setStyle(themeController.getScoreCellUsedStyle());
+                    if (columnCombos.get(uiIndex) == 1) {
+                        scoreCell.setStyle(themeController.getScoreCellUsedStyle());
                     }
                     // Unused combinations - restore default green/light background
-                    else if (kasVeeretatudMängijal.get(currentVeergIndex).get(uiIndex) == 0) {
-                        punktiLahter.setStyle(themeController.getScoreCellDefaultStyle());
+                    else {
+                        scoreCell.setStyle(themeController.getScoreCellDefaultStyle());
                     }
                 });
             }
         }
     }
 }
+

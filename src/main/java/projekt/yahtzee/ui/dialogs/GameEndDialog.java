@@ -64,162 +64,161 @@ public class GameEndDialog {
      * 
      * @param teavitused Label to display winner message
      */
-    public void handleGameEnd(Label teavitused) {
+    public void handleGameEnd(Label statusLabel) {
         // Retrieve winners from the controller.
-        List<Player> võitjad = gameController.getWinners();
-        List<Player> sorteeritudMängijad = gameController.getSortedPlayers();
+        List<Player> winners = gameController.getWinners();
+        List<Player> sortedPlayers = gameController.getSortedPlayers();
         
         // Build the winner summary string.
-        StringBuilder võitjaTekst = new StringBuilder("MÄNG LÄBI!\n\n");
-        if (võitjad.size() == 1) {
-            võitjaTekst.append("VÕITJA: ").append(võitjad.get(0).getPlayerName())
-                      .append("\nSKOOR: ").append(võitjad.get(0).getTotalScore());
+        StringBuilder winnerText = new StringBuilder("MÄNG LÄBI!\n\n");
+        if (winners.size() == 1) {
+            winnerText.append("VÕITJA: ").append(winners.get(0).getPlayerName())
+                      .append("\nSKOOR: ").append(winners.get(0).getTotalScore());
         } else {
-            võitjaTekst.append("VIIK! VÕITJAD:\n");
-            for (Player võitja : võitjad) {
-                võitjaTekst.append(võitja.getPlayerName())
-                          .append(" - ").append(võitja.getTotalScore()).append("\n");
+            winnerText.append("VIIK! VÕITJAD:\n");
+            for (Player winner : winners) {
+                winnerText.append(winner.getPlayerName())
+                          .append(" - ").append(winner.getTotalScore()).append("\n");
             }
         }
         
         // Update the status label on the board.
-        teavitused.setText(võitjaTekst.toString());
+        statusLabel.setText(winnerText.toString());
         
-        statisticsController.updateStatistics(gameController.getPlayers(), võitjad);
-        ResultsFileManager.salvestaTulemused(sorteeritudMängijad);
+        statisticsController.updateStatistics(gameController.getPlayers(), winners);
+        ResultsFileManager.saveResults(sortedPlayers);
         
-        kuvaLõppdialoog(võitjaTekst.toString(), sorteeritudMängijad);
+        showEndDialog(winnerText.toString(), sortedPlayers);
     }
     
     /**
      * Displays the end-of-game dialog with the full scoreboard results.
      *
-     * @param võitjaTekst winner summary text
-     * @param sorteeritudMängijad players sorted by score
+     * @param winnerText winner summary text
+     * @param sortedPlayers players sorted by score
      */
-    public void kuvaLõppdialoog(String võitjaTekst, List<Player> sorteeritudMängijad) {
+    public void showEndDialog(String winnerText, List<Player> sortedPlayers) {
         // Play the wow sound on game end.
-        if (soundController.getWowSound() != null) {
-            soundController.getWowSound().stop();
-            soundController.getWowSound().play();
+        if (soundController != null) {
+            soundController.playClip(soundController.getWowSound());
         }
         
         Font boldFont = GameConstants.getCellFontBold();
         Font regularFont = GameConstants.getCellFont();
 
-        List<String> tulemuseRead = new ArrayList<>();
-        for (int i = 0; i < sorteeritudMängijad.size(); i++) {
-            Player mängija = sorteeritudMängijad.get(i);
-            tulemuseRead.add((i + 1) + ". " + mängija.getPlayerName() +
-                             " - " + mängija.getTotalScore() + " punkti");
+        List<String> resultRows = new ArrayList<>();
+        for (int i = 0; i < sortedPlayers.size(); i++) {
+            Player player = sortedPlayers.get(i);
+            resultRows.add((i + 1) + ". " + player.getPlayerName() +
+                           " - " + player.getTotalScore() + " punkti");
         }
 
         double winnerBoxPadding = 64;
         double resultsBoxPadding = 40;
         double containerPadding = 80;
-        double konteinerMaxWidth = 680;
-        double konteinerMinWidth = 380;
+        double containerMaxWidth = 680;
+        double containerMinWidth = 380;
 
-        double winnerLineWidth = DialogLayoutUtil.measureMaxLineWidth(võitjaTekst, boldFont);
+        double winnerLineWidth = DialogLayoutUtil.measureMaxLineWidth(winnerText, boldFont);
         double titleWidth = DialogLayoutUtil.measureTextWidth("KÕIK TULEMUSED:", boldFont);
-        double resultsLineWidth = tulemuseRead.stream()
+        double resultsLineWidth = resultRows.stream()
             .mapToDouble(line -> DialogLayoutUtil.measureTextWidth(line, regularFont))
             .max().orElse(0.0);
 
         double desiredInnerWidth = Math.max(winnerLineWidth + winnerBoxPadding,
             Math.max(420, Math.max(titleWidth + resultsBoxPadding, resultsLineWidth + resultsBoxPadding)));
-        double preferredWidth = Math.max(konteinerMinWidth,
-            Math.min(konteinerMaxWidth, desiredInnerWidth + containerPadding));
+        double preferredWidth = Math.max(containerMinWidth,
+            Math.min(containerMaxWidth, desiredInnerWidth + containerPadding));
         double contentAreaWidth = preferredWidth - containerPadding;
         double winnerLabelMaxWidth = Math.max(0, contentAreaWidth - winnerBoxPadding);
         double resultLabelMaxWidth = Math.max(0, contentAreaWidth - resultsBoxPadding);
 
-        Stage lõppDialoog = new Stage();
-        lõppDialoog.initOwner(ownerStage);
-        lõppDialoog.setTitle("Mäng läbi!");
+        Stage endDialog = new Stage();
+        endDialog.initOwner(ownerStage);
+        endDialog.setTitle("Mäng läbi!");
 
         // Winner message card.
-        Label võitjaLabel = new Label(võitjaTekst);
-        võitjaLabel.setFont(boldFont);
-        võitjaLabel.setStyle(themeController.getLabelTextFill());
-        võitjaLabel.setWrapText(true);
-        võitjaLabel.setTextAlignment(TextAlignment.CENTER);
-        võitjaLabel.setAlignment(Pos.CENTER);
-        võitjaLabel.setMaxWidth(winnerLabelMaxWidth);
+        Label winnerLabel = new Label(winnerText);
+        winnerLabel.setFont(boldFont);
+        winnerLabel.setStyle(themeController.getLabelTextFill());
+        winnerLabel.setWrapText(true);
+        winnerLabel.setTextAlignment(TextAlignment.CENTER);
+        winnerLabel.setAlignment(Pos.CENTER);
+        winnerLabel.setMaxWidth(winnerLabelMaxWidth);
 
-        StackPane võitjaKast = new StackPane();
-        võitjaKast.setPadding(new Insets(20, 32, 20, 32));
-        String sisuTaust = "-fx-background-color: " + themeController.getTitleBoxBackground() + ";";
-        võitjaKast.setStyle(sisuTaust + " -fx-background-radius: 12; -fx-border-radius: 12;");
-        võitjaKast.setMaxWidth(contentAreaWidth);
-        võitjaKast.getChildren().add(võitjaLabel);
+        StackPane winnerContainer = new StackPane();
+        winnerContainer.setPadding(new Insets(20, 32, 20, 32));
+        String contentBackgroundStyle = "-fx-background-color: " + themeController.getTitleBoxBackground() + ";";
+        winnerContainer.setStyle(contentBackgroundStyle + " -fx-background-radius: 12; -fx-border-radius: 12;");
+        winnerContainer.setMaxWidth(contentAreaWidth);
+        winnerContainer.getChildren().add(winnerLabel);
 
         // Results list card.
-        VBox tulemusteKast = new VBox();
-        tulemusteKast.setAlignment(Pos.CENTER_LEFT);
-        tulemusteKast.setSpacing(8);
-        tulemusteKast.setPadding(new Insets(20));
-        tulemusteKast.setPrefWidth(contentAreaWidth);
-        tulemusteKast.setMaxWidth(contentAreaWidth);
-        tulemusteKast.setStyle(sisuTaust + " -fx-background-radius: 12; -fx-border-radius: 12;");
+        VBox resultsContainer = new VBox();
+        resultsContainer.setAlignment(Pos.CENTER_LEFT);
+        resultsContainer.setSpacing(8);
+        resultsContainer.setPadding(new Insets(20));
+        resultsContainer.setPrefWidth(contentAreaWidth);
+        resultsContainer.setMaxWidth(contentAreaWidth);
+        resultsContainer.setStyle(contentBackgroundStyle + " -fx-background-radius: 12; -fx-border-radius: 12;");
 
-        Label tulemusedPealkiri = new Label("KÕIK TULEMUSED:");
-        tulemusedPealkiri.setFont(boldFont);
-        tulemusedPealkiri.setStyle(themeController.getLabelTextFill());
-        tulemusedPealkiri.setTextAlignment(TextAlignment.LEFT);
-        tulemusedPealkiri.setAlignment(Pos.CENTER_LEFT);
-        tulemusedPealkiri.setMaxWidth(resultLabelMaxWidth);
-        tulemusteKast.getChildren().add(tulemusedPealkiri);
+        Label resultsTitle = new Label("KÕIK TULEMUSED:");
+        resultsTitle.setFont(boldFont);
+        resultsTitle.setStyle(themeController.getLabelTextFill());
+        resultsTitle.setTextAlignment(TextAlignment.LEFT);
+        resultsTitle.setAlignment(Pos.CENTER_LEFT);
+        resultsTitle.setMaxWidth(resultLabelMaxWidth);
+        resultsContainer.getChildren().add(resultsTitle);
 
-        for (String tulemusTekst : tulemuseRead) {
-            Label tulemusLabel = new Label(tulemusTekst);
-            tulemusLabel.setFont(regularFont);
-            tulemusLabel.setStyle(themeController.getLabelTextFill());
-            tulemusLabel.setWrapText(true);
-            tulemusLabel.setTextAlignment(TextAlignment.LEFT);
-            tulemusLabel.setAlignment(Pos.CENTER_LEFT);
-            tulemusLabel.setMaxWidth(resultLabelMaxWidth);
-            tulemusteKast.getChildren().add(tulemusLabel);
+        for (String resultText : resultRows) {
+            Label resultLabel = new Label(resultText);
+            resultLabel.setFont(regularFont);
+            resultLabel.setStyle(themeController.getLabelTextFill());
+            resultLabel.setWrapText(true);
+            resultLabel.setTextAlignment(TextAlignment.LEFT);
+            resultLabel.setAlignment(Pos.CENTER_LEFT);
+            resultLabel.setMaxWidth(resultLabelMaxWidth);
+            resultsContainer.getChildren().add(resultLabel);
         }
 
         // Action buttons.
-        HBox nupud = new HBox();
-        nupud.setAlignment(Pos.CENTER);
-        nupud.setSpacing(GameConstants.SPACING_NORMAL);
+        HBox buttonRow = new HBox();
+        buttonRow.setAlignment(Pos.CENTER);
+        buttonRow.setSpacing(GameConstants.SPACING_NORMAL);
 
-        Button peamenüüNupp = new Button("Tagasi peamenüüsse");
-        peamenüüNupp.setPrefWidth(GameConstants.BUTTON_EXIT_WIDTH);
-        peamenüüNupp.setPrefHeight(GameConstants.BUTTON_EXIT_HEIGHT);
-        peamenüüNupp.setStyle(GameConstants.BUTTON_WHEAT_STYLE);
-        UIHelper.attachButtonAnimations(peamenüüNupp, soundController);
-        peamenüüNupp.setOnAction(e -> {
-            lõppDialoog.close();
+        Button mainMenuButton = new Button("Tagasi peamenüüsse");
+        mainMenuButton.setPrefWidth(GameConstants.BUTTON_EXIT_WIDTH);
+        mainMenuButton.setPrefHeight(GameConstants.BUTTON_EXIT_HEIGHT);
+        mainMenuButton.setStyle(GameConstants.BUTTON_WHEAT_STYLE);
+        UIHelper.attachButtonAnimations(mainMenuButton, soundController);
+        mainMenuButton.setOnAction(e -> {
+            endDialog.close();
             onReturnToMenu.run();
         });
 
-        Button sulgeNupp = new Button("Sulge");
-        sulgeNupp.setPrefWidth(GameConstants.BUTTON_EXIT_WIDTH);
-        sulgeNupp.setPrefHeight(GameConstants.BUTTON_EXIT_HEIGHT);
-        sulgeNupp.setStyle(GameConstants.BUTTON_ERROR_STYLE);
-        UIHelper.attachButtonAnimations(sulgeNupp, soundController);
-        sulgeNupp.setOnAction(e -> {
-            lõppDialoog.close();
+        Button closeButton = new Button("Sulge");
+        closeButton.setPrefWidth(GameConstants.BUTTON_EXIT_WIDTH);
+        closeButton.setPrefHeight(GameConstants.BUTTON_EXIT_HEIGHT);
+        closeButton.setStyle(GameConstants.BUTTON_ERROR_STYLE);
+        UIHelper.attachButtonAnimations(closeButton, soundController);
+        closeButton.setOnAction(e -> {
+            endDialog.close();
             Platform.exit();
         });
 
-        nupud.getChildren().addAll(peamenüüNupp, sulgeNupp);
+        buttonRow.getChildren().addAll(mainMenuButton, closeButton);
 
-        StackPane taust = ThemedDialogBuilder.create(themeController)
-            .withMinWidth(konteinerMinWidth)
-            .withMaxWidth(konteinerMaxWidth)
+        StackPane backgroundContainer = ThemedDialogBuilder.create(themeController)
+            .withMinWidth(containerMinWidth)
+            .withMaxWidth(containerMaxWidth)
             .withPreferredWidth(preferredWidth)
-            .build(võitjaKast, tulemusteKast, nupud);
+            .build(winnerContainer, resultsContainer, buttonRow);
 
-        Scene stseen = new Scene(taust);
-        lõppDialoog.setResizable(false);
-        lõppDialoog.setScene(stseen);
-        lõppDialoog.sizeToScene();
-        lõppDialoog.show();
+        Scene dialogScene = new Scene(backgroundContainer);
+        endDialog.setResizable(false);
+        endDialog.setScene(dialogScene);
+        endDialog.sizeToScene();
+        endDialog.show();
     }
 
 }

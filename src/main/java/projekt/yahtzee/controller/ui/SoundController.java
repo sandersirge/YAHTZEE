@@ -4,10 +4,10 @@ import javafx.scene.media.AudioClip;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.io.File;
+import java.io.IOException;
 import java.util.Random;
+import projekt.yahtzee.util.ResourceLoader;
 
 /**
  * Manages all game sound effects and background music loaded from resources.
@@ -32,65 +32,66 @@ public class SoundController {
     // Background music.
     private MediaPlayer menuMusic;
     private MediaPlayer gameMusic;
+    private final Random random = new Random();
     
     /**
      * Creates the controller and loads every sound effect.
      */
     public SoundController() {
-        laadiHelid();
+        loadSounds();
     }
     
     /**
      * Loads all sound effects and background music clips.
      */
-    private void laadiHelid() {
+    private void loadSounds() {
         // Dice roll sound.
-        rollSound = laadiAudioClip("/projekt/yahtzee/sounds/rolling_dice.mp3", 0.5);
+        rollSound = loadAudioClip("/projekt/yahtzee/sounds/rolling_dice.mp3", 0.5);
         
         // Button hover sound.
-        buttonHoverSound = laadiAudioClip("/projekt/yahtzee/sounds/hover.mp3", 0.2);
+        buttonHoverSound = loadAudioClip("/projekt/yahtzee/sounds/hover.mp3", 0.2);
         
         // Button click sound.
-        buttonClickSound = laadiAudioClip("/projekt/yahtzee/sounds/click.mp3", 0.3);
+        buttonClickSound = loadAudioClip("/projekt/yahtzee/sounds/click.mp3", 0.3);
         
         // Invalid click sound.
-        invalidClickSound = laadiAudioClip("/projekt/yahtzee/sounds/ah-hell-nahhh.mp3", 0.5);
+        invalidClickSound = loadAudioClip("/projekt/yahtzee/sounds/ah-hell-nahhh.mp3", 0.5);
         
         // Pan hit sound.
-        panHitSound = laadiAudioClip("/projekt/yahtzee/sounds/pan_hit.mp3", 0.4);
+        panHitSound = loadAudioClip("/projekt/yahtzee/sounds/pan_hit.mp3", 0.4);
         
         // Bonk sound.
-        bonkSound = laadiAudioClip("/projekt/yahtzee/sounds/bonk.mp3", 0.4);
+        bonkSound = loadAudioClip("/projekt/yahtzee/sounds/bonk.mp3", 0.4);
         
         // Wow sound (game end).
-        wowSound = laadiAudioClip("/projekt/yahtzee/sounds/anime-wow.mp3", 0.5);
+        wowSound = loadAudioClip("/projekt/yahtzee/sounds/anime-wow.mp3", 0.5);
         
         // Ding sound (score > 0).
-        dingSound = laadiAudioClip("/projekt/yahtzee/sounds/ding.mp3", 0.4);
+        dingSound = loadAudioClip("/projekt/yahtzee/sounds/ding.mp3", 0.4);
         
         // SpongeBob boowomp sound (score = 0).
-        spongebobBoowompSound = laadiAudioClip("/projekt/yahtzee/sounds/spongebob-boowomp.mp3", 0.5);
+        spongebobBoowompSound = loadAudioClip("/projekt/yahtzee/sounds/spongebob-boowomp.mp3", 0.5);
         
         // SpongeBob fail sound (score = 0).
-        spongebobFailSound = laadiAudioClip("/projekt/yahtzee/sounds/spongebob-fail.mp3", 0.5);
+        spongebobFailSound = loadAudioClip("/projekt/yahtzee/sounds/spongebob-fail.mp3", 0.5);
         
         // Taco Bell sound (game start).
-        tacoBellSound = laadiAudioClip("/projekt/yahtzee/sounds/taco-bell.mp3", 0.5);
+        tacoBellSound = loadAudioClip("/projekt/yahtzee/sounds/taco-bell.mp3", 0.5);
         
         // Undertaker's bell sound (game start).
-        undertakersBellSound = laadiAudioClip("/projekt/yahtzee/sounds/undertakers-bell.mp3", 0.5);
+        undertakersBellSound = loadAudioClip("/projekt/yahtzee/sounds/undertakers-bell.mp3", 0.5);
         
         // Vine boom sound (non-interactive cells).
-        vineBoomSound = laadiAudioClip("/projekt/yahtzee/sounds/vine-boom.mp3", 0.4);
+        vineBoomSound = loadAudioClip("/projekt/yahtzee/sounds/vine-boom.mp3", 0.4);
         
         // Violin screech sound (already used cell).
-        violinScreechSound = laadiAudioClip("/projekt/yahtzee/sounds/violin-screech-meme.mp3", 0.4);
+        violinScreechSound = loadAudioClip("/projekt/yahtzee/sounds/violin-screech-meme.mp3", 0.4);
         
         // Menu background music.
-        menuMusic = laadiMediaPlayer("/projekt/yahtzee/sounds/menu_elevator_music.mp3");
+        menuMusic = loadMediaPlayer("/projekt/yahtzee/sounds/menu_elevator_music.mp3");
         
         // In-game background music.
-        gameMusic = laadiMediaPlayer("/projekt/yahtzee/sounds/game_music.mp3");
+        gameMusic = loadMediaPlayer("/projekt/yahtzee/sounds/game_music.mp3");
     }
     
     /**
@@ -100,24 +101,14 @@ public class SoundController {
      * @param volume volume in the range 0.0 to 1.0
      * @return loaded audio clip or {@code null} when loading fails
      */
-    private AudioClip laadiAudioClip(String path, double volume) {
+    private AudioClip loadAudioClip(String path, double volume) {
         try {
-            InputStream stream = laadiRessurss(path);
-            String fileName = path.substring(path.lastIndexOf('/') + 1);
-            String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
-            String extension = fileName.substring(fileName.lastIndexOf('.'));
-            
-            File tempFile = File.createTempFile(baseName, extension);
-            tempFile.deleteOnExit();
-            Files.copy(stream, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            
+            File tempFile = copyResourceToTempFile(path);
             AudioClip clip = new AudioClip(tempFile.toURI().toString());
             clip.setVolume(volume);
-            stream.close();
-            
             return clip;
         } catch (Exception e) {
-            System.out.println(path + " failed to load: " + e.getMessage());
+            logResourceLoadFailure(path, e);
             return null;
         }
     }
@@ -128,72 +119,40 @@ public class SoundController {
      * @param path resource path of the music file
      * @return configured media player or {@code null} when loading fails
      */
-    private MediaPlayer laadiMediaPlayer(String path) {
+    private MediaPlayer loadMediaPlayer(String path) {
         try {
-            InputStream stream = laadiRessurss(path);
-            String fileName = path.substring(path.lastIndexOf('/') + 1);
-            String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
-            String extension = fileName.substring(fileName.lastIndexOf('.'));
-            
-            File tempFile = File.createTempFile(baseName, extension);
-            tempFile.deleteOnExit();
-            Files.copy(stream, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            
+            File tempFile = copyResourceToTempFile(path);
             Media media = new Media(tempFile.toURI().toString());
-            MediaPlayer player = new MediaPlayer(media);
-            stream.close();
-            
-            return player;
+            return new MediaPlayer(media);
         } catch (Exception e) {
-            System.out.println(path + " failed to load: " + e.getMessage());
+            logResourceLoadFailure(path, e);
             return null;
         }
+    }
+
+    private void logResourceLoadFailure(String path, Exception exception) {
+        System.err.println("Failed to load audio resource " + path + ": " + exception.getMessage());
+        exception.printStackTrace(System.err);
+    }
+
+    /**
+     * Copies the resource addressed by {@code path} into a temporary file for consumption by audio APIs.
+     *
+     * @param path resource path to copy
+     * @return temporary file that contains the resource content
+     * @throws IOException when the temporary file cannot be created or written
+     */
+    private File copyResourceToTempFile(String path) throws IOException {
+        return ResourceLoader.copyResourceToTempFile(path);
     }
     
     /**
      * Opens a resource stream using several fallback lookups.
      *
-     * @param tee resource path
+    * @param resourcePath resource path
      * @return input stream for the resource
      * @throws RuntimeException when the resource cannot be found
      */
-    private InputStream laadiRessurss(String tee) {
-        InputStream stream = getClass().getResourceAsStream(tee);
-        if (stream != null) return stream;
-        
-        String teeTaSlash = tee.startsWith("/") ? tee.substring(1) : tee;
-        stream = getClass().getClassLoader().getResourceAsStream(teeTaSlash);
-        if (stream != null) return stream;
-        
-        stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(teeTaSlash);
-        if (stream != null) return stream;
-        
-        try {
-            stream = getClass().getModule().getResourceAsStream(teeTaSlash);
-            if (stream != null) return stream;
-        } catch (IOException e) {
-            // Ignore missing module lookups.
-        }
-        
-        String[] võimalikudTeed = {
-            "src/main/resources/" + teeTaSlash,
-            "YAHTZEE/src/main/resources/" + teeTaSlash,
-            "../YAHTZEE/src/main/resources/" + teeTaSlash,
-            "build/resources/main/" + teeTaSlash
-        };
-        
-        for (String failTee : võimalikudTeed) {
-            try {
-                File fail = new File(failTee);
-                if (fail.exists()) return new FileInputStream(fail);
-            } catch (FileNotFoundException e) {
-                // Keep searching.
-            }
-        }
-        
-        throw new RuntimeException("Resource not found: " + tee);
-    }
-    
     // Sound-effect getters.
     
     public AudioClip getRollSound() { return rollSound; }
@@ -211,6 +170,19 @@ public class SoundController {
     public AudioClip getVineBoomSound() { return vineBoomSound; }
     public AudioClip getViolinScreechSound() { return violinScreechSound; }
     
+    /**
+     * Plays the provided audio clip from the start when it is available.
+     *
+     * @param clip clip to play
+     */
+    public void playClip(AudioClip clip) {
+        if (clip == null) {
+            return;
+        }
+        clip.stop();
+        clip.play();
+    }
+
     /**
      * Starts the menu background music in an infinite loop.
      */
@@ -270,17 +242,10 @@ public class SoundController {
      * Plays either the Taco Bell or Undertaker's bell sound at random.
      */
     public void playRandomGameStartSound() {
-        Random random = new Random();
         if (random.nextBoolean()) {
-            if (tacoBellSound != null) {
-                tacoBellSound.stop();
-                tacoBellSound.play();
-            }
+            playClip(tacoBellSound);
         } else {
-            if (undertakersBellSound != null) {
-                undertakersBellSound.stop();
-                undertakersBellSound.play();
-            }
+            playClip(undertakersBellSound);
         }
     }
     
@@ -288,17 +253,10 @@ public class SoundController {
      * Plays either the pan hit or bonk sound at random.
      */
     public void playRandomPlayerNameClickSound() {
-        Random random = new Random();
         if (random.nextBoolean()) {
-            if (panHitSound != null) {
-                panHitSound.stop();
-                panHitSound.play();
-            }
+            playClip(panHitSound);
         } else {
-            if (bonkSound != null) {
-                bonkSound.stop();
-                bonkSound.play();
-            }
+            playClip(bonkSound);
         }
     }
     
@@ -306,17 +264,10 @@ public class SoundController {
      * Plays either the SpongeBob boowomp or fail sound at random.
      */
     public void playRandomZeroScoreSound() {
-        Random random = new Random();
         if (random.nextBoolean()) {
-            if (spongebobBoowompSound != null) {
-                spongebobBoowompSound.stop();
-                spongebobBoowompSound.play();
-            }
+            playClip(spongebobBoowompSound);
         } else {
-            if (spongebobFailSound != null) {
-                spongebobFailSound.stop();
-                spongebobFailSound.play();
-            }
+            playClip(spongebobFailSound);
         }
     }
 }

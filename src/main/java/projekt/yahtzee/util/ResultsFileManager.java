@@ -20,21 +20,22 @@ public class ResultsFileManager {
     /**
      * Appends the sorted game results to the results file.
      *
-     * @param sorteeritudMängijad players sorted by score
+     * @param sortedPlayers players sorted by score
      */
-    public static void salvestaTulemused(List<Player> sorteeritudMängijad) {
+    public static void saveResults(List<Player> sortedPlayers) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(GameConstants.RESULTS_FILE, true))) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
             writer.write("\n=== GAME " + LocalDateTime.now().format(formatter) + " ===\n");
             
-            for (int i = 0; i < sorteeritudMängijad.size(); i++) {
-                Player mängija = sorteeritudMängijad.get(i);
-                writer.write((i + 1) + ". " + mängija.getPlayerName() +
-                           " - " + mängija.getTotalScore() + " points\n");
+            for (int i = 0; i < sortedPlayers.size(); i++) {
+                Player player = sortedPlayers.get(i);
+                writer.write((i + 1) + ". " + player.getPlayerName() +
+                           " - " + player.getTotalScore() + " points\n");
             }
             writer.write("\n");
         } catch (IOException e) {
-            System.err.println("Failed to save results: " + e.getMessage());
+            System.err.println("Failed to save results to " + GameConstants.RESULTS_FILE + ": " + e.getMessage());
+            e.printStackTrace(System.err);
         }
     }
 }

@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import projekt.yahtzee.controller.game.GameController;
 import projekt.yahtzee.controller.ui.SoundController;
+import projekt.yahtzee.ui.components.ScoreCellHandler;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -41,8 +42,8 @@ public class UIHelper {
         // Hover-in animation and sound.
         button.setOnMouseEntered(e -> {
             // Play hover sound.
-            if (soundController != null && soundController.getButtonHoverSound() != null) {
-                soundController.getButtonHoverSound().play();
+            if (soundController != null) {
+                soundController.playClip(soundController.getButtonHoverSound());
             }
             
             ScaleTransition st = new ScaleTransition(Duration.millis(100), button);
@@ -66,9 +67,8 @@ public class UIHelper {
         // Press animation and click sound.
         button.setOnMousePressed(e -> {
             // Play click sound.
-            if (soundController != null && soundController.getButtonClickSound() != null) {
-                soundController.getButtonClickSound().stop();
-                soundController.getButtonClickSound().play();
+            if (soundController != null) {
+                soundController.playClip(soundController.getButtonClickSound());
             }
             
             ScaleTransition st = new ScaleTransition(Duration.millis(50), button);
@@ -119,7 +119,7 @@ public class UIHelper {
                                          List<List<Integer>> usedCellsByPlayer,
                                          GameController gameController) {
         // Ignore non-interactive scoreboard cells.
-        if (uiIndex == 0 || uiIndex == 7 || uiIndex == 8 || uiIndex == 16 || uiIndex == 17) {
+        if (ScoreCellHandler.isNonInteractiveRow(uiIndex)) {
             return;
         }
         

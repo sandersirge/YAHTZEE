@@ -5,6 +5,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -25,91 +27,98 @@ public class ExitDialog {
     /**
      * Displays the exit confirmation dialog.
      *
-     * @param pealava parent stage that owns the dialog
+    * @param ownerStage parent stage that owns the dialog
      * @param themeController controller providing theme-dependent styles
      * @param soundController controller responsible for sound effects
      * @param onExit callback executed after the user confirms exiting
      */
-    public static void show(Stage pealava, ThemeController themeController, SoundController soundController, Runnable onExit) {
+    public static Stage show(Stage ownerStage, ThemeController themeController, SoundController soundController, Runnable onExit) {
         Stage exitDialog = new Stage();
-        exitDialog.initOwner(pealava);
+        exitDialog.initOwner(ownerStage);
         exitDialog.setTitle("Mängust väljumine");
         
-        StackPane lahkumineVaheleht = new StackPane();
-        lahkumineVaheleht.setStyle(themeController.getBackgroundStyle());
-        lahkumineVaheleht.setPadding(new Insets(30));
+        StackPane exitRoot = new StackPane();
+        exitRoot.setStyle(themeController.getBackgroundStyle());
+        exitRoot.setPadding(new Insets(30));
         
-        Font tekstFont = GameConstants.getCheckboxLabelFont();
-        double tekstikastiPadding = 64;
-        double konteineriPadding = 80;
-        double konteineriMinLaius = 360;
-        double konteineriMaxLaius = 520;
+        Font messageFont = GameConstants.getCheckboxLabelFont();
+        double messageBoxPadding = 64;
+        double containerPadding = 80;
+        double containerMinWidth = 360;
+        double containerMaxWidth = 520;
 
         String message = "Kas soovid mängust väljuda ja peamenüüsse naasta?";
-        double sõnumiLaius = measureTextWidth(message, tekstFont);
-        double soovitudSisemineLaius = Math.max(320, sõnumiLaius + tekstikastiPadding);
-        double eelistatudLaius = Math.max(konteineriMinLaius,
-            Math.min(konteineriMaxLaius, soovitudSisemineLaius + konteineriPadding));
-        double sisuAlaLaius = eelistatudLaius - konteineriPadding;
-        double tekstiMaxLaius = Math.max(0, sisuAlaLaius - tekstikastiPadding);
+        double messageWidth = measureTextWidth(message, messageFont);
+        double desiredInnerWidth = Math.max(320, messageWidth + messageBoxPadding);
+        double preferredWidth = Math.max(containerMinWidth,
+            Math.min(containerMaxWidth, desiredInnerWidth + containerPadding));
+        double contentAreaWidth = preferredWidth - containerPadding;
+        double messageMaxWidth = Math.max(0, contentAreaWidth - messageBoxPadding);
 
-        VBox lahkumineElemendid = new VBox();
-        lahkumineElemendid.setAlignment(Pos.CENTER);
-        lahkumineElemendid.setSpacing(GameConstants.SPACING_LARGE);
-        lahkumineElemendid.setPadding(new Insets(20, 40, 20, 40));
-        lahkumineElemendid.setMinWidth(konteineriMinLaius);
-        lahkumineElemendid.setMaxWidth(konteineriMaxLaius);
-        lahkumineElemendid.setPrefWidth(eelistatudLaius);
-        String konteineriTaust = "-fx-background-color: " + themeController.getBoxBackgroundColor() + ";";
-        lahkumineElemendid.setStyle(konteineriTaust + " -fx-background-radius: 18; -fx-border-radius: 18;");
+        VBox exitContent = new VBox();
+        exitContent.setAlignment(Pos.CENTER);
+        exitContent.setSpacing(GameConstants.SPACING_LARGE);
+        exitContent.setPadding(new Insets(20, 40, 20, 40));
+        exitContent.setMinWidth(containerMinWidth);
+        exitContent.setMaxWidth(containerMaxWidth);
+        exitContent.setPrefWidth(preferredWidth);
+        String containerBackgroundStyle = "-fx-background-color: " + themeController.getBoxBackgroundColor() + ";";
+        exitContent.setStyle(containerBackgroundStyle + " -fx-background-radius: 18; -fx-border-radius: 18;");
 
-        Label väljumineTekst = new Label(message);
-        väljumineTekst.setFont(tekstFont);
-        väljumineTekst.setStyle(themeController.getLabelTextFill());
-        väljumineTekst.setWrapText(true);
-        väljumineTekst.setTextAlignment(TextAlignment.CENTER);
-        väljumineTekst.setAlignment(Pos.CENTER);
-        väljumineTekst.setMaxWidth(tekstiMaxLaius);
+        Label messageLabel = new Label(message);
+        messageLabel.setFont(messageFont);
+        messageLabel.setStyle(themeController.getLabelTextFill());
+        messageLabel.setWrapText(true);
+        messageLabel.setTextAlignment(TextAlignment.CENTER);
+        messageLabel.setAlignment(Pos.CENTER);
+        messageLabel.setMaxWidth(messageMaxWidth);
 
-        StackPane tekstikast = new StackPane();
-        tekstikast.setPadding(new Insets(20, 32, 20, 32));
-        String tekstikastiTaust = "-fx-background-color: " + themeController.getTitleBoxBackground() + ";";
-        tekstikast.setStyle(tekstikastiTaust + " -fx-background-radius: 12; -fx-border-radius: 12;");
-        tekstikast.setMaxWidth(sisuAlaLaius);
-        tekstikast.getChildren().add(väljumineTekst);
+        StackPane messageContainer = new StackPane();
+        messageContainer.setPadding(new Insets(20, 32, 20, 32));
+        String messageContainerBackground = "-fx-background-color: " + themeController.getTitleBoxBackground() + ";";
+        messageContainer.setStyle(messageContainerBackground + " -fx-background-radius: 12; -fx-border-radius: 12;");
+        messageContainer.setMaxWidth(contentAreaWidth);
+        messageContainer.getChildren().add(messageLabel);
 
-        HBox väljumisNupud = new HBox();
-        väljumisNupud.setAlignment(Pos.CENTER);
-        väljumisNupud.setSpacing(GameConstants.SPACING_LARGE);
-        
-        Button jahNupp = new Button(GameConstants.BUTTON_YES);
-        jahNupp.setStyle(GameConstants.BUTTON_ERROR_STYLE);
-        jahNupp.setScaleX(GameConstants.SCALE_BUTTON_MEDIUM);
-        jahNupp.setScaleY(GameConstants.SCALE_BUTTON_MEDIUM);
-        UIHelper.attachButtonAnimations(jahNupp, soundController);
-        jahNupp.setOnAction(e -> {
+        HBox buttonRow = new HBox();
+        buttonRow.setAlignment(Pos.CENTER);
+        buttonRow.setSpacing(GameConstants.SPACING_LARGE);
+
+        Button yesButton = new Button(GameConstants.BUTTON_YES);
+        yesButton.setStyle(GameConstants.BUTTON_ERROR_STYLE);
+        yesButton.setScaleX(GameConstants.SCALE_BUTTON_MEDIUM);
+        yesButton.setScaleY(GameConstants.SCALE_BUTTON_MEDIUM);
+        UIHelper.attachButtonAnimations(yesButton, soundController);
+        yesButton.setOnAction(e -> {
             exitDialog.close();
             if (onExit != null) {
                 onExit.run();
             }
         });
         
-        Button eiNupp = new Button(GameConstants.BUTTON_NO);
-        eiNupp.setStyle(GameConstants.BUTTON_SUCCESS_STYLE);
-        eiNupp.setScaleX(GameConstants.SCALE_BUTTON_MEDIUM);
-        eiNupp.setScaleY(GameConstants.SCALE_BUTTON_MEDIUM);
-        UIHelper.attachButtonAnimations(eiNupp, soundController);
-        eiNupp.setOnAction(e -> exitDialog.close());
-        
-        väljumisNupud.getChildren().addAll(jahNupp, eiNupp);
-        lahkumineElemendid.getChildren().addAll(tekstikast, väljumisNupud);
-        lahkumineVaheleht.getChildren().add(lahkumineElemendid);
-        
-        Scene lahkumisStseen = new Scene(lahkumineVaheleht);
+        Button noButton = new Button(GameConstants.BUTTON_NO);
+        noButton.setStyle(GameConstants.BUTTON_SUCCESS_STYLE);
+        noButton.setScaleX(GameConstants.SCALE_BUTTON_MEDIUM);
+        noButton.setScaleY(GameConstants.SCALE_BUTTON_MEDIUM);
+        UIHelper.attachButtonAnimations(noButton, soundController);
+        noButton.setOnAction(e -> exitDialog.close());
+
+        buttonRow.getChildren().addAll(yesButton, noButton);
+        exitContent.getChildren().addAll(messageContainer, buttonRow);
+        exitRoot.getChildren().add(exitContent);
+
+        Scene exitScene = new Scene(exitRoot);
+        exitScene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+                exitDialog.close();
+                event.consume();
+            }
+        });
         exitDialog.setResizable(false);
-        exitDialog.setScene(lahkumisStseen);
+        exitDialog.setScene(exitScene);
         exitDialog.sizeToScene();
         exitDialog.show();
+        return exitDialog;
     }
 
     private static double measureTextWidth(String content, Font font) {

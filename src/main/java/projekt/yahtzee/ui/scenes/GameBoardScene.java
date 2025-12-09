@@ -6,7 +6,6 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -25,14 +24,15 @@ import projekt.yahtzee.controller.ui.ThemeController;
 import projekt.yahtzee.controller.data.StatisticsController;
 import projekt.yahtzee.ui.components.DicePanel;
 import projekt.yahtzee.ui.components.ScoreCellHandler;
-import projekt.yahtzee.ui.dialogs.ExitDialog;
 import projekt.yahtzee.ui.handlers.KeyboardHandler;
 import projekt.yahtzee.ui.handlers.UIHelper;
 import projekt.yahtzee.util.GameConstants;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Random;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -189,18 +189,7 @@ public class GameBoardScene {
      * Plays one of the game-start sound effects when the board scene is created.
      */
     private void playGameStartSound() {
-        Random gameStartRandom = new Random();
-        if (gameStartRandom.nextBoolean()) {
-            if (soundController.getTacoBellSound() != null) {
-                soundController.getTacoBellSound().stop();
-                soundController.getTacoBellSound().play();
-            }
-        } else {
-            if (soundController.getUndertakersBellSound() != null) {
-                soundController.getUndertakersBellSound().stop();
-                soundController.getUndertakersBellSound().play();
-            }
-        }
+        soundController.playRandomGameStartSound();
     }
     
     /**
@@ -248,16 +237,16 @@ public class GameBoardScene {
         VBox upperSection = new VBox();
         upperSection.setAlignment(Pos.TOP_CENTER);
         upperSection.setPrefWidth(GameConstants.DICE_PANEL_WIDTH);
-        upperSection.setSpacing(GameConstants.SPACING_MEDIUM);
-        upperSection.setPadding(new Insets(0));
+        upperSection.setSpacing(GameConstants.SPACING_SMALL);
+        upperSection.setPadding(new Insets(10, 20, 10, 20));
         upperSection.setStyle(themeController.getDicePanelStyle());
         VBox.setVgrow(upperSection, Priority.ALWAYS);
 
         VBox lowerSection = new VBox();
         lowerSection.setAlignment(Pos.CENTER);
         lowerSection.setPrefWidth(GameConstants.DICE_PANEL_WIDTH);
-        lowerSection.setSpacing(GameConstants.SPACING_LARGE);
-        lowerSection.setPadding(new Insets(0));
+        lowerSection.setSpacing(GameConstants.SPACING_MEDIUM);
+        lowerSection.setPadding(new Insets(10, 20, 20, 20));
         lowerSection.setStyle(themeController.getDicePanelStyle());
         VBox.setVgrow(lowerSection, Priority.ALWAYS);
 
@@ -270,7 +259,6 @@ public class GameBoardScene {
         // Construct dice panel using DicePanel component.
         final DicePanel dicePanel = new DicePanel(themeController, gameController.getDice());
         VBox diceBoxContainer = dicePanel.createDicePanel();
-        final List<CheckBox> keepCheckboxes = dicePanel.getKeepCheckboxes();
         dicePanel.setCheckboxesDisabled(true);
 
         upperSection.getChildren().addAll(titleLabel, diceBoxContainer);
@@ -289,16 +277,38 @@ public class GameBoardScene {
         statusLabel.setTextAlignment(TextAlignment.CENTER);
         statusLabel.setStyle(themeController.getLabelTextFill());
 
-        Button rollButton = createRollButton(keepCheckboxes, dicePanel, diceValues, rollCounterLabel,
+        Button rollButton = createRollButton(dicePanel, diceValues, rollCounterLabel,
             statusLabel, playerColumns, playerTurnCounter, playerUsedCombinations, scoreboardController);
 
         Button exitButton = createExitButton(primaryStage, onGameEnd);
 
         HBox buttonRow = new HBox();
         buttonRow.setAlignment(Pos.CENTER);
-        buttonRow.setSpacing(130);
+        buttonRow.setSpacing(GameConstants.SPACING_BUTTON_ROW_WIDE);
         buttonRow.getChildren().addAll(rollButton, exitButton);
         lowerSection.getChildren().addAll(rollCounterLabel, statusLabel, buttonRow);
+
+        Button helpButton = new Button("?");
+        helpButton.setPrefSize(46, 46);
+        helpButton.setMinSize(46, 46);
+        helpButton.setMaxSize(46, 46);
+        helpButton.setStyle("-fx-background-color: #1976D2; -fx-text-fill: white; -fx-font-size: 22; -fx-font-weight: bold; -fx-background-radius: 23; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 6, 0, 0, 2);");
+        helpButton.setCursor(Cursor.HAND);
+        UIHelper.attachButtonAnimations(helpButton, soundController);
+        helpButton.setOnAction(e -> KeyboardHandler.toggleHelpDialog(primaryStage, themeController, soundController));
+
+        Label helpLabel = new Label("Vajuta 'h' juhiste kuvamiseks");
+        helpLabel.setFont(GameConstants.getCellFont());
+        helpLabel.setStyle(themeController.getLabelTextFill());
+
+        HBox helpRow = new HBox();
+        helpRow.setAlignment(Pos.CENTER_RIGHT);
+        helpRow.setSpacing(10);
+        helpRow.setPadding(new Insets(0, 0, 10, 0));
+        helpRow.getChildren().addAll(helpLabel, helpButton);
+
+        // Place help row inside the lower section so it sits below the divider
+        lowerSection.getChildren().add(0, helpRow);
 
         return new DiceSectionContext(dicePanelContainer, dicePanel, rollButton, exitButton, rollCounterLabel, statusLabel);
     }
@@ -306,13 +316,13 @@ public class GameBoardScene {
     /**
      * Creates the roll button and wires the rolling logic.
      */
-    private Button createRollButton(List<CheckBox> keepCheckboxes, DicePanel dicePanel,
+    private Button createRollButton(DicePanel dicePanel,
                                    List<Integer> diceValues, Label rollCounterLabel,
                                    Label statusLabel, List<List<Label>> playerColumns,
                                    AtomicInteger playerTurnCounter,
                                    List<List<Integer>> playerUsedCombinations,
                                    ScoreboardController scoreboardController) {
-        Button rollButton = new Button(GameConstants.ROLL_BUTTON);
+        Button rollButton = new Button(GameConstants.BUTTON_ROLL_DICE);
         rollButton.setScaleX(GameConstants.SCALE_BUTTON_LARGE);
         rollButton.setScaleY(GameConstants.SCALE_BUTTON_LARGE);
         rollButton.setStyle(themeController.getButtonStyle());
@@ -327,16 +337,19 @@ public class GameBoardScene {
                 return;
             }
             
-            int[] kept = new int[GameConstants.DICE_COUNT];
-            for (int i = 0; i < keepCheckboxes.size(); i++) {
-                kept[i] = keepCheckboxes.get(i).isSelected() ? 1 : 0;
+            int[] kept = dicePanel.getKeepStatus();
+            List<Integer> preRollValues = gameController.getDiceValues();
+            Map<Integer, Integer> keptValueCounts = new HashMap<>();
+            for (int i = 0; i < kept.length && i < preRollValues.size(); i++) {
+                if (kept[i] == 1) {
+                    int val = preRollValues.get(i);
+                    keptValueCounts.put(val, keptValueCounts.getOrDefault(val, 0) + 1);
+                }
             }
             
             rollButton.setDisable(true);
             
-            if (soundController.getRollSound() != null) {
-                soundController.getRollSound().play();
-            }
+            soundController.playClip(soundController.getRollSound());
             
             gameController.rollDice(kept);
             
@@ -345,34 +358,45 @@ public class GameBoardScene {
             diceValues.addAll(updatedValues);
 
             dicePanel.animateDiceRoll(kept, updatedValues, () -> {
-                dicePanel.resetCheckboxes();
+                dicePanel.syncKeepSelections(keptValueCounts, updatedValues);
                 dicePanel.setCheckboxesDisabled(false);
-                dicePanel.setFocusedDieIndex(0);
-                
                 int uusRollCount = gameController.getCurrentRollCount();
                 rollCounterLabel.setText(uusRollCount + "/3");
-                statusLabel.setText("Vali alleshoitavad täringud\nvõi pane endale punktid tabelisse");
 
                 int currentPlayerIndex = playerTurnCounter.get();
                 if (currentPlayerIndex >= 0 && currentPlayerIndex < playerColumns.size()) {
-                    scoreboardController.displayPossibleScores(gameController, diceValues, 
-                                           currentPlayerIndex, 
-                                           playerUsedCombinations.get(currentPlayerIndex));
+                    scoreboardController.displayPossibleScores(gameController, diceValues,
+                        currentPlayerIndex,
+                        playerUsedCombinations.get(currentPlayerIndex));
+                }
 
-                    int[] focusableRows = {1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15};
-                    boolean focusSet = false;
-                    for (int row : focusableRows) {
-                        if (playerUsedCombinations.get(currentPlayerIndex).get(row) == 0) {
-                            scoreboardController.setKeyboardFocus(currentPlayerIndex, row);
-                            focusSet = true;
-                            break;
+                boolean mustPickScore = uusRollCount >= GameConstants.MAX_ROLLS;
+                if (mustPickScore) {
+                    statusLabel.setText("Sa ei saa rohkem veeretada\nVali tabelist sobivad punktid!");
+                    dicePanel.setCheckboxesDisabled(true);
+                    dicePanel.setFocusedDieIndex(-1);
+
+                    if (currentPlayerIndex >= 0 && currentPlayerIndex < playerColumns.size()) {
+                        int[] focusableRows = {1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15};
+                        boolean focusSet = false;
+                        for (int row : focusableRows) {
+                            if (playerUsedCombinations.get(currentPlayerIndex).get(row) == 0) {
+                                scoreboardController.setKeyboardFocus(currentPlayerIndex, row);
+                                focusSet = true;
+                                break;
+                            }
+                        }
+                        if (!focusSet) {
+                            scoreboardController.clearKeyboardFocus();
                         }
                     }
-                    if (!focusSet) {
-                        scoreboardController.clearKeyboardFocus();
-                    }
+                } else {
+                    statusLabel.setText("Vali alleshoitavad täringud\nvõi pane endale punktid tabelisse");
+                    scoreboardController.clearKeyboardFocus();
+                    dicePanel.setCheckboxesDisabled(false);
+                    dicePanel.setFocusedDieIndex(0);
                 }
-                
+
                 rollButton.setDisable(false);
             });
         });
@@ -392,7 +416,7 @@ public class GameBoardScene {
         UIHelper.attachButtonAnimations(exitButton, soundController);
 
         exitButton.setOnAction(actionEvent -> {
-            ExitDialog.show(primaryStage, themeController, soundController, onGameEnd);
+            KeyboardHandler.toggleExitDialog(primaryStage, themeController, soundController, onGameEnd);
         });
         
         return exitButton;
@@ -403,10 +427,11 @@ public class GameBoardScene {
      */
     private List<String> initializePlayers(List<TextField> nameFields) {
         List<String> playerNames = new ArrayList<>();
-        for (TextField tf : nameFields) {
-            String name = tf.getText();
+        for (int i = 0; i < nameFields.size(); i++) {
+            TextField field = nameFields.get(i);
+            String name = field.getText();
             if (name.isEmpty()) {
-                name = GameConstants.getDefaultPlayerName(nameFields.indexOf(tf) + 1);
+                name = GameConstants.getDefaultPlayerName(i + 1);
             }
             playerNames.add(name);
             gameController.addPlayer(name);
@@ -419,11 +444,7 @@ public class GameBoardScene {
      */
     private void initializeUsedCombos(List<List<Integer>> playerUsedCombinations, int playerCount) {
         for (int p = 0; p < playerCount; p++) {
-            List<Integer> comboUsage = new ArrayList<>();
-            for (int i = 0; i < 18; i++) {
-                comboUsage.add(0);
-            }
-            playerUsedCombinations.add(comboUsage);
+            playerUsedCombinations.add(new ArrayList<>(Collections.nCopies(GameConstants.TOTAL_ROWS, 0)));
         }
     }
     
@@ -435,10 +456,7 @@ public class GameBoardScene {
         for (Node node : comboNameColumn.getChildren()) {
             if (node instanceof Label) {
                 ((Label) node).setOnMouseClicked(e -> {
-                    if (soundController.getVineBoomSound() != null) {
-                        soundController.getVineBoomSound().stop();
-                        soundController.getVineBoomSound().play();
-                    }
+                    soundController.playClip(soundController.getVineBoomSound());
                 });
             }
         }

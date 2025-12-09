@@ -301,43 +301,43 @@ public class ScoreboardController {
     }
     
     /**
-     * Arvutab ja kuvab võimalikud skoorid antud täringute väärtuste jaoks.
-     * 
+     * Calculates and displays possible scores for the provided dice values.
+     *
      * @param gameController the game controller instance
-     * @param väärtused täringute väärtused
-     * @param playerIndex mängija indeks
-     * @param kasVeeretatud list mis jälgib kasutatud kombinatsioone
+     * @param diceValues current dice values
+     * @param playerIndex index of the active player
+     * @param usedCombinations list tracking which combinations are already used
      */
-    public void displayPossibleScores(GameController gameController, List<Integer> väärtused, 
-                                      int playerIndex, List<Integer> kasVeeretatud) {
+    public void displayPossibleScores(GameController gameController, List<Integer> diceValues,
+                                      int playerIndex, List<Integer> usedCombinations) {
         if (playerIndex < 0 || playerIndex >= playerColumns.size()) {
             return;
         }
         
-        List<Label> mängijaVeerg = playerColumns.get(playerIndex);
+        List<Label> playerColumn = playerColumns.get(playerIndex);
         
         // Convert usage flags to primitive array for GameController.
         int[] usedCombos = new int[13];
         
         // Upper section: UI rows 1-6 map to controller indices 0-5.
         for (int i = 0; i < 6; i++) {
-            usedCombos[i] = kasVeeretatud.get(i + 1);
+            usedCombos[i] = usedCombinations.get(i + 1);
         }
         
         // Lower section: UI rows 9-15 map to controller indices 6-12.
         for (int i = 0; i < 7; i++) {
-            usedCombos[i + 6] = kasVeeretatud.get(i + 9);
+            usedCombos[i + 6] = usedCombinations.get(i + 9);
         }
         
         // Calculate possible scores.
-        String[] scores = gameController.calculatePossibleScores(väärtused, usedCombos);
+        String[] scores = gameController.calculatePossibleScores(diceValues, usedCombos);
         
         // Update UI labels with potential scores.
         for (int i = 0; i < scores.length; i++) {
             if (scores[i] != null) {
                 int uiIndex = (i < 6) ? i + 1 : i + 3;
-                if (uiIndex < mängijaVeerg.size()) {
-                    mängijaVeerg.get(uiIndex).setText(scores[i]);
+                if (uiIndex < playerColumn.size()) {
+                    playerColumn.get(uiIndex).setText(scores[i]);
                 }
             }
         }

@@ -25,9 +25,6 @@ public class GameConstants {
     
     // ========== DICE PANEL SIZES ==========
     public static final double DICE_PANEL_WIDTH = 800;
-    public static final double DICE_PANEL_HEIGHT = 1080;
-    public static final double DICE_PANEL_UPPER_HEIGHT = 540;
-    public static final double DICE_PANEL_LOWER_HEIGHT = 540;
     public static final double DICE_CONTAINER_WIDTH = 700;
     public static final double DICE_CONTAINER_HEIGHT = 130;
     public static final double CHECKBOX_CONTAINER_HEIGHT = 100;
@@ -42,7 +39,6 @@ public class GameConstants {
     // ========== DICE SETTINGS ==========
     public static final int DICE_COUNT = 5;
     public static final double DICE_IMAGE_SIZE = 125;
-    public static final double DICE_DISPLAY_SIZE = 75;
     public static final double DICE_SPACING = 40;
     
     // ========== COLORS (MATERIAL DESIGN) ==========
@@ -86,7 +82,8 @@ public class GameConstants {
     public static final double SPACING_MEDIUM = 30;
     public static final double SPACING_NORMAL = 30;
     public static final double SPACING_SMALL = 20;
-    public static final double SPACING_CHECKBOX = 40; // same as DICE_SPACING
+    public static final double SPACING_DICE_CHECKBOX_ROW = 130;
+    public static final double SPACING_BUTTON_ROW_WIDE = 130;
     public static final double PADDING_STANDARD = 20;
     
     // ========== BUTTON SIZES ==========
@@ -104,11 +101,10 @@ public class GameConstants {
     public static final String TITLE_WELCOME = "Meme Yahtzee";
     public static final String TITLE_YAHTZEE = "Yahtzee";
     public static final String LABEL_PLAYER_COUNT = "Sisesta mängijate arv (maksimum 3)";
-    public static final String LABEL_KEEP_DICE = "Linnukest kasti märkides saad valida, mida uuesti ei veeretata.";
+    public static final String LABEL_KEEP_DICE = "Kliki täringutel, mida soovid alles hoida";
     public static final String BUTTON_NEW_GAME = "Uus mäng";
     public static final String BUTTON_START_GAME = "Alusta mängu";
     public static final String BUTTON_ROLL_DICE = "Veereta täringuid";
-    public static final String ROLL_BUTTON = "Veereta täringuid";
     public static final String BUTTON_EXIT_GAME = "Lahku mängust";
     public static final String BUTTON_BEST_RESULTS = "Mängutulemused";
     public static final String BUTTON_YES = "Jah";
@@ -124,7 +120,6 @@ public class GameConstants {
     public static final String FIRST_PLAYER_TURN = "1. mängija kord";
     public static final String MSG_PLAYER_TURN = ". mängija kord";
     public static final String MSG_ROLL_NUMBER = ". veeretus\nVali alleshoitavad täringud\nvõi pane endale punktid tabelisse";
-    public static final String NO_MORE_ROLLS = "Sa ei saa rohkem veeretada\nVali tabelist sobivad punktid!";
     public static final String MSG_NO_MORE_ROLLS = "Sa ei saa rohkem veeretada\nVali tabelist sobivad punktid!";
     public static final String MSG_EXIT_CONFIRM = "Kas oled kindel, et soovid mängust lahkuda?";
     public static final String MSG_BONUS_AWARDED = "Boonus omistatud!";
@@ -160,6 +155,7 @@ public class GameConstants {
     public static final int UPPER_SECTION_BONUS_POINTS = 35;
     
     // ========== FILE PATHS ==========
+    public static final String SETTINGS_FILE = "settings.txt";
     public static final String RESULTS_FILE = "tulemused.txt";
     public static final String DICE_IMAGE_PATH = "/projekt/yahtzee/images/täring";
     public static final String DICE_IMAGE_EXTENSION = ".png";
