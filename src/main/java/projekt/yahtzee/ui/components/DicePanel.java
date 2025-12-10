@@ -7,6 +7,7 @@ import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
@@ -17,6 +18,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
 import projekt.yahtzee.model.Die;
 import projekt.yahtzee.util.GameConstants;
@@ -48,6 +50,7 @@ public class DicePanel {
     private final boolean[] keepDisabled;
     private final Random random;
     private final Image[] diceImageCache;
+    private final Image checkmarkImage;
     private int focusedDieIndex = -1;
     
     /**
@@ -64,6 +67,7 @@ public class DicePanel {
         this.keepDisabled = new boolean[GameConstants.DICE_COUNT];
         this.random = new Random();
         this.diceImageCache = new Image[7];
+        this.checkmarkImage = loadCheckmarkImage();
         preloadDiceImages();
     }
     
@@ -120,13 +124,15 @@ public class DicePanel {
         
         // Keep dice label
         Label keepLabel = new Label(GameConstants.LABEL_KEEP_DICE);
-        keepLabel.setFont(GameConstants.getCheckboxLabelFont());
+        keepLabel.setFont(Font.font(GameConstants.FONT_FAMILY, FontWeight.BOLD, GameConstants.FONT_SIZE_CHECKBOX_LABEL));
         keepLabel.setStyle(themeController.getLabelTextFill());
         
         HBox keepLabelContainer = new HBox();
         keepLabelContainer.setAlignment(Pos.CENTER);
         keepLabelContainer.setPrefWidth(GameConstants.DICE_CONTAINER_WIDTH);
         keepLabelContainer.setMinHeight(GameConstants.TEXT_CONTAINER_HEIGHT);
+        keepLabelContainer.setPadding(new Insets(8, 12, 8, 12));
+        keepLabelContainer.setStyle("-fx-background-color: " + themeController.getTitleBoxBackground() + "; -fx-background-radius: 12; -fx-border-radius: 12;");
         keepLabelContainer.getChildren().add(keepLabel);
         
         dicePanel.getChildren().addAll(diceContainer, checkboxContainer, keepLabelContainer);
@@ -136,6 +142,19 @@ public class DicePanel {
     private void preloadDiceImages() {
         for (int value = 1; value <= DICE_FACE_COUNT; value++) {
             diceImageCache[value] = loadDiceImage(value);
+        }
+    }
+
+    private Image loadCheckmarkImage() {
+        String path = "/projekt/yahtzee/images/check.png";
+        URL imageUrl = getClass().getResource(path);
+        if (imageUrl != null) {
+            return new Image(imageUrl.toExternalForm());
+        }
+        try (InputStream imageStream = ResourceLoader.openResourceStream(path)) {
+            return new Image(imageStream);
+        } catch (IOException e) {
+            throw new RuntimeException("Error loading checkmark image", e);
         }
     }
 
@@ -412,7 +431,16 @@ public class DicePanel {
 
     private void updateIndicatorVisual(int index) {
         Label indicator = keepIndicators.get(index);
-        indicator.setText(keepSelected[index] ? "✓" : "");
+        if (keepSelected[index]) {
+            ImageView iconView = new ImageView(checkmarkImage);
+            iconView.setFitWidth(26);
+            iconView.setFitHeight(26);
+            iconView.setPreserveRatio(true);
+            indicator.setGraphic(iconView);
+        } else {
+            indicator.setGraphic(null);
+        }
+        indicator.setText(null);
         indicator.setTextFill(Color.web(themeController.isDarkTheme() ? "#FFFFFF" : "#263238"));
     }
 

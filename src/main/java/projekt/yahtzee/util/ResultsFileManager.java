@@ -5,6 +5,10 @@ import projekt.yahtzee.model.Player;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -37,5 +41,16 @@ public class ResultsFileManager {
             System.err.println("Failed to save results to " + GameConstants.RESULTS_FILE + ": " + e.getMessage());
             e.printStackTrace(System.err);
         }
+    }
+
+    /**
+     * Loads the saved results file into memory using UTF-8. Callers are responsible for handling missing files.
+     *
+     * @return lines from the results file in order
+     * @throws IOException if the file cannot be read
+     */
+    public static List<String> loadResults() throws IOException {
+        Path resultsPath = Paths.get(GameConstants.RESULTS_FILE);
+        return Files.readAllLines(resultsPath, StandardCharsets.UTF_8);
     }
 }

@@ -148,14 +148,14 @@ public class ThemeController {
      * Returns the background color used for box containers.
      */
     public String getBoxBackgroundColor() {
-        return isDarkTheme() ? "#3E5058" : "rgba(0, 0, 0, 0.1)";
+        return isDarkTheme() ? "#3e5058b6" : "rgba(0, 0, 0, 0.1)";
     }
     
     /**
      * Returns the background color for title boxes.
      */
     public String getTitleBoxBackground() {
-        return isDarkTheme() ? "#455A64" : "rgba(0, 0, 0, 0.2)";
+        return isDarkTheme() ? "rgba(110, 130, 142, 0.44)" : "rgba(255, 255, 255, 0.5)";
     }
     
     public String getButtonStyle() {
@@ -221,7 +221,7 @@ public class ThemeController {
     
     public String getDicePanelStyle() {
         return isDarkTheme()
-            ? "-fx-background-color: #37474F; -fx-border-style: solid; -fx-border-width: 2; -fx-border-color: #546E7A;"
+            ? "-fx-background-color: #32444C; -fx-border-style: solid; -fx-border-width: 2; -fx-border-color: #4F616A;"
             : "-fx-background-color: #90CAF9; -fx-border-style: solid; -fx-border-width: 2; -fx-border-color: #64B5F6;";
     }
     

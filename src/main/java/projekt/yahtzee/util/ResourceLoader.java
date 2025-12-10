@@ -6,12 +6,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Utility to load classpath resources with fallbacks and to materialize them as temp files when needed.
  */
 public final class ResourceLoader {
+    private static final Map<String, Path> TEMP_FILE_CACHE = new ConcurrentHashMap<>();
+
     private ResourceLoader() {
         throw new IllegalStateException("Utility class");
     }
@@ -90,5 +95,30 @@ public final class ResourceLoader {
         }
 
         return tempFile;
+    }
+
+    /**
+     * Retrieves a cached temporary file for the given resource, copying it once per application run.
+     *
+     * @param resourcePath path of the resource to materialize
+     * @return cached temp file containing the resource contents
+     * @throws IOException when the resource cannot be read or the temp file cannot be written
+     */
+    public static File copyResourceToCachedTempFile(String resourcePath) throws IOException {
+        Path cachedPath = TEMP_FILE_CACHE.get(resourcePath);
+        if (cachedPath != null && Files.exists(cachedPath)) {
+            return cachedPath.toFile();
+        }
+
+        synchronized (TEMP_FILE_CACHE) {
+            cachedPath = TEMP_FILE_CACHE.get(resourcePath);
+            if (cachedPath != null && Files.exists(cachedPath)) {
+                return cachedPath.toFile();
+            }
+
+            File tempFile = copyResourceToTempFile(resourcePath);
+            TEMP_FILE_CACHE.put(resourcePath, tempFile.toPath());
+            return tempFile;
+        }
     }
 }

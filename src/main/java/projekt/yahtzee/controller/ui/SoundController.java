@@ -143,7 +143,7 @@ public class SoundController {
      * @throws IOException when the temporary file cannot be created or written
      */
     private File copyResourceToTempFile(String path) throws IOException {
-        return ResourceLoader.copyResourceToTempFile(path);
+        return ResourceLoader.copyResourceToCachedTempFile(path);
     }
     
     /**

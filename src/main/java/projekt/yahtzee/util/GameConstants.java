@@ -101,7 +101,7 @@ public class GameConstants {
     public static final String TITLE_WELCOME = "Meme Yahtzee";
     public static final String TITLE_YAHTZEE = "Yahtzee";
     public static final String LABEL_PLAYER_COUNT = "Sisesta mängijate arv (maksimum 3)";
-    public static final String LABEL_KEEP_DICE = "Kliki täringutel, mida soovid alles hoida";
+    public static final String LABEL_KEEP_DICE = "Kliki peale veeretamist täringutel, mida soovid alles hoida";
     public static final String BUTTON_NEW_GAME = "Uus mäng";
     public static final String BUTTON_START_GAME = "Alusta mängu";
     public static final String BUTTON_ROLL_DICE = "Veereta täringuid";
@@ -157,6 +157,7 @@ public class GameConstants {
     // ========== FILE PATHS ==========
     public static final String SETTINGS_FILE = "settings.txt";
     public static final String RESULTS_FILE = "tulemused.txt";
+    public static final String STATISTICS_FILE = "statistics.txt";
     public static final String DICE_IMAGE_PATH = "/projekt/yahtzee/images/täring";
     public static final String DICE_IMAGE_EXTENSION = ".png";
     

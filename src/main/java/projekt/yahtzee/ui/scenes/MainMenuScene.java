@@ -12,13 +12,18 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import projekt.yahtzee.util.GameConstants;
+import projekt.yahtzee.util.ResultsFileManager;
 import projekt.yahtzee.controller.data.StatisticsController;
 import projekt.yahtzee.controller.ui.SoundController;
 import projekt.yahtzee.controller.ui.ThemeController;
 import projekt.yahtzee.ui.handlers.UIHelper;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.nio.file.NoSuchFileException;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Manages the menu-related scenes: main menu, results view, and statistics view.
@@ -107,7 +112,7 @@ public class MainMenuScene {
             stage.setScene(statsScene);
         });
 
-        String themeButtonText = themeController.isDarkTheme() ? "☀ Hele teema" : "🌑 Tume teema";
+        String themeButtonText = themeController.isDarkTheme() ? "☀ Hele teema" : "🌙 Tume teema";
         Button themeButton = new Button(themeButtonText);
         themeButton.setPrefWidth(GameConstants.BUTTON_MENU_WIDTH);
         themeButton.setPrefHeight(GameConstants.BUTTON_MENU_HEIGHT);
@@ -195,15 +200,27 @@ public class MainMenuScene {
         resultsBox.getChildren().add(resultsHeader);
 
         // Load saved results from the results file.
-        try (BufferedReader reader = new BufferedReader(new FileReader(new File(GameConstants.RESULTS_FILE)))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
+        try {
+            List<String> resultLines = ResultsFileManager.loadResults();
+            boolean hasVisibleLines = false;
+            for (String line : resultLines) {
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+                hasVisibleLines = true;
                 Label resultLabel = new Label(line);
                 resultLabel.setFont(GameConstants.getCellFont());
                 resultLabel.setStyle(themeController.getLabelTextFill());
                 resultsBox.getChildren().add(resultLabel);
             }
-        } catch (FileNotFoundException ex) {
+
+            if (!hasVisibleLines) {
+                Label emptyLabel = new Label("Tulemusi ei leitud");
+                emptyLabel.setFont(GameConstants.getCellFont());
+                emptyLabel.setStyle(themeController.getLabelTextFill());
+                resultsBox.getChildren().add(emptyLabel);
+            }
+        } catch (NoSuchFileException ex) {
             Label errorLabel = new Label("Tulemusi ei leitud");
             errorLabel.setFont(GameConstants.getCellFont());
             errorLabel.setStyle(themeController.getLabelTextFill());
