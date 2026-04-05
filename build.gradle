@@ -1,9 +1,6 @@
 plugins {
     id 'java'
     id 'application'
-    id 'org.javamodularity.moduleplugin' version '1.8.12'
-    id 'org.openjfx.javafxplugin' version '0.0.13'
-    id 'org.beryx.jlink' version '2.25.0'
 }
 
 group 'projekt'
@@ -14,7 +11,8 @@ repositories {
 }
 
 ext {
-    junitVersion = '5.10.0'
+    junitVersion = '5.11.4'
+    javafxVersion = '21.0.2'
 }
 
 java {
@@ -31,16 +29,31 @@ application {
     mainClass = 'projekt.yahtzee.YahtzeeApplication'
 }
 
-javafx {
-    version = '21'
-    modules = ['javafx.controls', 'javafx.fxml', 'javafx.media']
+// Detect platform for JavaFX classifier.
+def osName = System.getProperty('os.name').toLowerCase()
+def osArch = System.getProperty('os.arch').toLowerCase()
+def javafxClassifier
+if (osName.contains('win')) {
+    javafxClassifier = 'win'
+} else if (osName.contains('mac')) {
+    javafxClassifier = osArch.contains('aarch64') ? 'mac-aarch64' : 'mac'
+} else {
+    javafxClassifier = osArch.contains('aarch64') ? 'linux-aarch64' : 'linux'
 }
 
 dependencies {
+    implementation "org.openjfx:javafx-base:${javafxVersion}:${javafxClassifier}"
+    implementation "org.openjfx:javafx-graphics:${javafxVersion}:${javafxClassifier}"
+    implementation "org.openjfx:javafx-controls:${javafxVersion}:${javafxClassifier}"
+    implementation "org.openjfx:javafx-fxml:${javafxVersion}:${javafxClassifier}"
+    implementation "org.openjfx:javafx-media:${javafxVersion}:${javafxClassifier}"
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testImplementation("org.junit.jupiter:junit-jupiter-params:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
+
 
 test {
     useJUnitPlatform()
@@ -50,14 +63,36 @@ javadoc {
     options.encoding = 'UTF-8'
 }
 
-jlink {
-    imageZip = project.file("${layout.buildDirectory.get()}/distributions/app-${javafx.platform.classifier}.zip")
-    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
-    launcher {
-        name = 'app'
+// Custom jlink task replacing the beryx jlink plugin.
+// Custom jlink task replacing the beryx jlink plugin.
+tasks.register('jlink', Exec) {
+    description = 'Creates a custom JDK runtime image with jlink'
+    group = 'distribution'
+    dependsOn 'jar'
+
+    def imageDir = layout.buildDirectory.dir('jlink-image')
+    outputs.dir(imageDir)
+
+    doFirst {
+        def imagePath = imageDir.get().asFile
+        if (imagePath.exists()) {
+            imagePath.deleteDir()
+        }
+
+        def modulePath = configurations.runtimeClasspath.files
+                .collect { it.absolutePath }
+                .join(File.pathSeparator)
+        modulePath += File.pathSeparator + tasks.named('jar').get().archiveFile.get().asFile.absolutePath
+
+        commandLine 'jlink',
+                '--module-path', modulePath,
+                '--add-modules', 'projekt.yahtzee',
+                '--output', imagePath.absolutePath,
+                '--strip-debug',
+                '--compress', 'zip-9',
+                '--no-header-files',
+                '--no-man-pages',
+                '--launcher', 'app=projekt.yahtzee/projekt.yahtzee.YahtzeeApplication'
     }
 }
 
-jlinkZip {
-    group = 'distribution'
-}
