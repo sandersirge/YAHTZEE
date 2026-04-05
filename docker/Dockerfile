@@ -50,7 +50,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the self-contained jlink image (no JDK required at runtime)
-COPY --from=builder /app/build/image /opt/yahtzee
+COPY --from=builder /app/build/jlink-image /opt/yahtzee
 
 # Data volume mount point for persistent files (settings, results, statistics)
 RUN mkdir -p /data
