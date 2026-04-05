@@ -9,17 +9,15 @@ import java.util.HashMap;
  * Requires three of one value and two of another value.
  * Always scores 25 points when valid.
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class FullHouse extends Combination {
     /**
      * Constructs a Full House combination.
-     * 
-     * @param index the position of this combination in the score sheet
      */
-    public FullHouse(int index) {
-        super("Full House", index);
+    public FullHouse() {
+        super("Full House");
     }
     
     /**

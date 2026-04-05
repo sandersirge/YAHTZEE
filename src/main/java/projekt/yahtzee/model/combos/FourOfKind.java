@@ -9,17 +9,15 @@ import java.util.HashMap;
  * Requires at least four dice showing the same value.
  * Scores the sum of all five dice.
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class FourOfKind extends Combination {
     /**
      * Constructs a Four of a Kind combination.
-     * 
-     * @param index the position of this combination in the score sheet
      */
-    public FourOfKind(int index) {
-        super("Four of a Kind", index);
+    public FourOfKind() {
+        super("Four of a Kind");
     }
     
     /**
@@ -32,11 +30,7 @@ public class FourOfKind extends Combination {
     @Override
     public int calculatePoints(List<Integer> values) {
         if (!isPossible(values)) return 0;
-        int sum = 0;
-        for (Integer v : values) {
-            sum += v;
-        }
-        return sum;
+        return sumAll(values);
     }
     
     /**

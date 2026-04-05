@@ -1,15 +1,12 @@
 package projekt.yahtzee.util;
 
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-
 /**
  * Contains all constants for the Yahtzee game UI.
- * Centralizes colors, fonts, sizes, and text constants to avoid hardcoded values.
- * 
- * @author Yahtzee Game Project
- * @version 1.0
+ * Centralizes sizes, text, and rule constants to avoid hardcoded values.
+ * JavaFX-dependent font/color utilities live in {@link UIFonts}.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class GameConstants {
     
@@ -20,9 +17,7 @@ public class GameConstants {
     public static final double MAIN_MENU_HEIGHT = 800;
     public static final double SETUP_WINDOW_WIDTH = 1000;
     public static final double SETUP_WINDOW_HEIGHT = 1100;
-    public static final double EXIT_WINDOW_WIDTH = 700;
-    public static final double EXIT_WINDOW_HEIGHT = 700;
-    
+
     // ========== DICE PANEL SIZES ==========
     public static final double DICE_PANEL_WIDTH = 800;
     public static final double DICE_CONTAINER_WIDTH = 700;
@@ -32,7 +27,6 @@ public class GameConstants {
     
     // ========== SCOREBOARD SIZES ==========
     public static final double SCOREBOARD_WIDTH = 1120;
-    public static final double SCOREBOARD_HEIGHT = 1080;
     public static final double COMBO_COLUMN_WIDTH = 300;
     public static final int TOTAL_ROWS = 18;
     
@@ -41,13 +35,7 @@ public class GameConstants {
     public static final double DICE_IMAGE_SIZE = 125;
     public static final double DICE_SPACING = 40;
     
-    // ========== COLORS (MATERIAL DESIGN) ==========
-    public static final Color ERROR_COLOR = Color.web("#D32F2F");
-    public static final Color BUTTON_SUCCESS_COLOR = Color.web("#66BB6A");
-    public static final Color BUTTON_ERROR_COLOR = Color.web("#EF5350");
-    public static final Color BUTTON_TEXT_COLOR = Color.WHITE;
-    public static final Color BUTTON_INFO_COLOR = Color.web("#42A5F5");
-    
+
     // ========== CSS STYLES ==========
     // Note: most styles now come from ThemeController based on the active theme.
     public static final String CELL_BORDER_STYLE = "-fx-border-style: solid;-fx-border-width: 1;";
@@ -61,10 +49,7 @@ public class GameConstants {
     public static final String BUTTON_INFO_STYLE = "-fx-background-color: #42A5F5; -fx-text-fill: white; " + BUTTON_BASE_STYLE;
     public static final String BUTTON_NEUTRAL_STYLE = "-fx-background-color: #757575; -fx-text-fill: white; " + BUTTON_BASE_STYLE;
     
-    // Checkbox styles.
-    public static final String CHECKBOX_STYLE = "-fx-scale-x: 1.5; -fx-scale-y: 1.5;";
-    public static final String CHECKBOX_HOVER_STYLE = "-fx-cursor: hand;";
-    
+
     // Score cell styles are supplied by ThemeController.
     // Bonus and total row styles also come from ThemeController.
     
@@ -84,8 +69,7 @@ public class GameConstants {
     public static final double SPACING_SMALL = 20;
     public static final double SPACING_DICE_CHECKBOX_ROW = 130;
     public static final double SPACING_BUTTON_ROW_WIDE = 130;
-    public static final double PADDING_STANDARD = 20;
-    
+
     // ========== BUTTON SIZES ==========
     public static final double BUTTON_MENU_WIDTH = 250;
     public static final double BUTTON_MENU_HEIGHT = 50;
@@ -114,15 +98,12 @@ public class GameConstants {
     public static final String ERROR_EMPTY_FIELD = "Tekstiväli ei tohi olla tühi!";
     public static final String ERROR_ONLY_INTEGERS = "Sisesta ainult täisarve tekstiväljale!";
     public static final String ERROR_PLAYER_COUNT = "Mängijate arv peab olema 1-3 vahel!";
-    public static final String ERROR_CANNOT_CLICK = "Selle kasti peale vajutades\nei saa punkte!";
-    
+
     // ========== GAME MESSAGES ==========
     public static final String FIRST_PLAYER_TURN = "1. mängija kord";
     public static final String MSG_PLAYER_TURN = ". mängija kord";
     public static final String MSG_ROLL_NUMBER = ". veeretus\nVali alleshoitavad täringud\nvõi pane endale punktid tabelisse";
     public static final String MSG_NO_MORE_ROLLS = "Sa ei saa rohkem veeretada\nVali tabelist sobivad punktid!";
-    public static final String MSG_EXIT_CONFIRM = "Kas oled kindel, et soovid mängust lahkuda?";
-    public static final String MSG_BONUS_AWARDED = "Boonus omistatud!";
     public static final String MSG_CURRENT_RESULTS = "Hetkel kuvatavad tulemused:";
     
     // ========== COMBO NAMES (ESTONIAN) ==========
@@ -149,7 +130,6 @@ public class GameConstants {
     public static final int MAX_PLAYERS = 3;
     public static final int MIN_PLAYERS = 1;
     public static final int MAX_ROLLS_PER_TURN = 3;
-    public static final int MAX_ROLLS = 3;
     public static final int TOTAL_COMBINATIONS = 13;
     public static final int UPPER_SECTION_BONUS_THRESHOLD = 63;
     public static final int UPPER_SECTION_BONUS_POINTS = 35;
@@ -179,69 +159,6 @@ public class GameConstants {
     }
     
     // ========== HELPER METHODS ==========
-    
-    /**
-     * Creates a standard title font.
-     * 
-     * @return Font object with title size
-     */
-    public static Font getTitleFont() {
-        return new Font(FONT_FAMILY, FONT_SIZE_TITLE);
-    }
-    
-    /**
-     * Creates a standard large font.
-     * 
-     * @return Font object with large size
-     */
-    public static Font getLargeFont() {
-        return new Font(FONT_SIZE_LARGE);
-    }
-    
-    /**
-     * Creates a standard medium font.
-     * 
-     * @return Font object with medium size
-     */
-    public static Font getMediumFont() {
-        return new Font(FONT_SIZE_MEDIUM);
-    }
-    
-    /**
-     * Creates a standard normal font.
-     * 
-     * @return Font object with normal size
-     */
-    public static Font getNormalFont() {
-        return new Font(FONT_FAMILY, FONT_SIZE_NORMAL);
-    }
-    
-    /**
-     * Creates a bold cell font.
-     * 
-     * @return Font object with cell size and bold weight
-     */
-    public static Font getCellFontBold() {
-        return Font.font(FONT_FAMILY, FontWeight.BOLD, FONT_SIZE_CELL);
-    }
-    
-    /**
-     * Creates a standard cell font.
-     * 
-     * @return Font object with cell size
-     */
-    public static Font getCellFont() {
-        return new Font(FONT_FAMILY, FONT_SIZE_CELL);
-    }
-    
-    /**
-     * Creates a checkbox label font.
-     * 
-     * @return Font object with checkbox label size
-     */
-    public static Font getCheckboxLabelFont() {
-        return new Font(FONT_FAMILY, FONT_SIZE_CHECKBOX_LABEL);
-    }
     
     /**
      * Gets the full path to a dice image.

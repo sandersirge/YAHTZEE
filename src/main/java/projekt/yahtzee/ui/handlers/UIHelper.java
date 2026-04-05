@@ -20,6 +20,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Utility helpers for common UI interactions and animations.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class UIHelper {
     

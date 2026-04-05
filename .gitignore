@@ -48,3 +48,7 @@ bin/
 # Ignore all .txt files anywhere; these are generated at runtime (e.g., settings/results).
 *.txt
 **/*.txt
+
+### Docker ###
+# Don't ignore docker/ folder itself, but ignore any generated Docker volumes
+docker-data/

@@ -18,6 +18,9 @@ import java.util.Map;
 
 /**
  * Manages game statistics such as total games, high scores, and win counts stored in statistics.txt.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class StatisticsController {
     private int totalGames;
@@ -26,10 +29,13 @@ public class StatisticsController {
     private double averageScore;
     private int totalScore;
     private int totalPlayerEntries;
-    private Map<String, Integer> playerWins;
-    private Map<String, Integer> playerGamesPlayed;
-    private Map<String, Integer> playerHighScores;
-    
+    private final Map<String, Integer> playerWins;
+    private final Map<String, Integer> playerGamesPlayed;
+    private final Map<String, Integer> playerHighScores;
+
+    /**
+     * Constructs a new statistics controller and loads any persisted statistics from disk.
+     */
     public StatisticsController() {
         this.totalGames = 0;
         this.highestScore = 0;
@@ -132,6 +138,9 @@ public class StatisticsController {
     
     /**
      * Updates statistics after a game concludes.
+     *
+     * @param players list of all players who participated in the game
+     * @param winners list of winning players
      */
     public void updateStatistics(List<Player> players, List<Player> winners) {
         totalGames++;
@@ -172,6 +181,13 @@ public class StatisticsController {
         saveStatistics();
     }
 
+    /**
+     * Parses an integer from a string with a fallback value.
+     *
+     * @param value    string to parse
+     * @param fallback value returned when parsing fails
+     * @return parsed integer or the fallback value
+     */
     private int parseIntSafe(String value, int fallback) {
         try {
             return Integer.parseInt(value);
@@ -180,6 +196,14 @@ public class StatisticsController {
         }
     }
 
+    /**
+     * Writes key-value entries from a map to the given writer.
+     *
+     * @param writer output writer
+     * @param prefix line prefix for each entry
+     * @param values map of entries to write
+     * @throws IOException when writing fails
+     */
     private void writeEntries(BufferedWriter writer, String prefix, Map<String, Integer> values) throws IOException {
         List<Map.Entry<String, Integer>> entries = new ArrayList<>(values.entrySet());
         entries.sort(Map.Entry.comparingByKey());
@@ -190,43 +214,69 @@ public class StatisticsController {
     }
     
     // Getters.
+
+    /**
+     * Gets the total number of games played.
+     *
+     * @return total games count
+     */
     public int getTotalGames() {
         return totalGames;
     }
     
+    /**
+     * Gets the highest score ever recorded.
+     *
+     * @return highest score
+     */
     public int getHighestScore() {
         return highestScore;
     }
     
+    /**
+     * Gets the name of the player who achieved the highest score.
+     *
+     * @return highest scoring player name, or empty string if none
+     */
     public String getHighestScorePlayer() {
         return highestScorePlayer;
     }
     
+    /**
+     * Gets the average score across all player entries.
+     *
+     * @return average score
+     */
     public double getAverageScore() {
         return averageScore;
     }
     
+    /**
+     * Gets a copy of the player win counts map.
+     *
+     * @return map of player names to win counts
+     */
     public Map<String, Integer> getPlayerWins() {
         return new HashMap<>(playerWins);
     }
     
+    /**
+     * Gets a copy of the player games-played counts map.
+     *
+     * @return map of player names to games-played counts
+     */
     public Map<String, Integer> getPlayerGamesPlayed() {
         return new HashMap<>(playerGamesPlayed);
     }
     
+    /**
+     * Gets a copy of the player high scores map.
+     *
+     * @return map of player names to their personal best scores
+     */
     public Map<String, Integer> getPlayerHighScores() {
         return new HashMap<>(playerHighScores);
     }
     
-    public int getPlayerWinCount(String playerName) {
-        return playerWins.getOrDefault(playerName, 0);
-    }
-    
-    public int getPlayerGamesCount(String playerName) {
-        return playerGamesPlayed.getOrDefault(playerName, 0);
-    }
-    
-    public int getPlayerHighScore(String playerName) {
-        return playerHighScores.getOrDefault(playerName, 0);
-    }
+
 }

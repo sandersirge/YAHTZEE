@@ -5,12 +5,14 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Random;
 import projekt.yahtzee.util.ResourceLoader;
 
 /**
  * Manages all game sound effects and background music loaded from resources.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class SoundController {
     // Sound effects.
@@ -22,12 +24,15 @@ public class SoundController {
     private AudioClip bonkSound;
     private AudioClip wowSound;
     private AudioClip dingSound;
+    private AudioClip answerCorrectSound;
     private AudioClip spongebobBoowompSound;
     private AudioClip spongebobFailSound;
+    private AudioClip buzzerErrorSound;
     private AudioClip tacoBellSound;
     private AudioClip undertakersBellSound;
     private AudioClip vineBoomSound;
     private AudioClip violinScreechSound;
+    private AudioClip miBomboclatSound;
     
     // Background music.
     private MediaPlayer menuMusic;
@@ -68,12 +73,14 @@ public class SoundController {
         
         // Ding sound (score > 0).
         dingSound = loadAudioClip("/projekt/yahtzee/sounds/ding.mp3", 0.4);
+        answerCorrectSound = loadAudioClip("/projekt/yahtzee/sounds/answer-correct.mp3", 0.4);
         
         // SpongeBob boowomp sound (score = 0).
         spongebobBoowompSound = loadAudioClip("/projekt/yahtzee/sounds/spongebob-boowomp.mp3", 0.5);
         
         // SpongeBob fail sound (score = 0).
         spongebobFailSound = loadAudioClip("/projekt/yahtzee/sounds/spongebob-fail.mp3", 0.5);
+        buzzerErrorSound = loadAudioClip("/projekt/yahtzee/sounds/buzzer-error.mp3", 0.5);
         
         // Taco Bell sound (game start).
         tacoBellSound = loadAudioClip("/projekt/yahtzee/sounds/taco-bell.mp3", 0.5);
@@ -86,6 +93,9 @@ public class SoundController {
         
         // Violin screech sound (already used cell).
         violinScreechSound = loadAudioClip("/projekt/yahtzee/sounds/violin-screech-meme.mp3", 0.4);
+
+        // Yahtzee celebration sound.
+        miBomboclatSound = loadAudioClip("/projekt/yahtzee/sounds/mi-bomboclat.mp3", 0.5);
         
         // Menu background music.
         menuMusic = loadMediaPlayer("/projekt/yahtzee/sounds/menu_elevator_music.mp3");
@@ -103,7 +113,7 @@ public class SoundController {
      */
     private AudioClip loadAudioClip(String path, double volume) {
         try {
-            File tempFile = copyResourceToTempFile(path);
+            File tempFile = ResourceLoader.copyResourceToCachedTempFile(path);
             AudioClip clip = new AudioClip(tempFile.toURI().toString());
             clip.setVolume(volume);
             return clip;
@@ -121,7 +131,7 @@ public class SoundController {
      */
     private MediaPlayer loadMediaPlayer(String path) {
         try {
-            File tempFile = copyResourceToTempFile(path);
+            File tempFile = ResourceLoader.copyResourceToCachedTempFile(path);
             Media media = new Media(tempFile.toURI().toString());
             return new MediaPlayer(media);
         } catch (Exception e) {
@@ -130,46 +140,34 @@ public class SoundController {
         }
     }
 
+    /**
+     * Logs a warning when an audio resource fails to load.
+     *
+     * @param path      resource path that failed
+     * @param exception the exception that occurred
+     */
     private void logResourceLoadFailure(String path, Exception exception) {
         System.err.println("Failed to load audio resource " + path + ": " + exception.getMessage());
         exception.printStackTrace(System.err);
     }
 
     /**
-     * Copies the resource addressed by {@code path} into a temporary file for consumption by audio APIs.
-     *
-     * @param path resource path to copy
-     * @return temporary file that contains the resource content
-     * @throws IOException when the temporary file cannot be created or written
-     */
-    private File copyResourceToTempFile(String path) throws IOException {
-        return ResourceLoader.copyResourceToCachedTempFile(path);
-    }
-    
-    /**
-     * Opens a resource stream using several fallback lookups.
-     *
-    * @param resourcePath resource path
-     * @return input stream for the resource
-     * @throws RuntimeException when the resource cannot be found
-     */
-    // Sound-effect getters.
-    
+     * Plays the provided audio clip from the start when it is available.
+    /** @return the dice rolling sound clip */
     public AudioClip getRollSound() { return rollSound; }
+    /** @return the button hover sound clip */
     public AudioClip getButtonHoverSound() { return buttonHoverSound; }
+    /** @return the button click sound clip */
     public AudioClip getButtonClickSound() { return buttonClickSound; }
+    /** @return the invalid click sound clip */
     public AudioClip getInvalidClickSound() { return invalidClickSound; }
-    public AudioClip getPanHitSound() { return panHitSound; }
-    public AudioClip getBonkSound() { return bonkSound; }
+    /** @return the wow celebration sound clip */
     public AudioClip getWowSound() { return wowSound; }
-    public AudioClip getDingSound() { return dingSound; }
-    public AudioClip getSpongebobBoowompSound() { return spongebobBoowompSound; }
-    public AudioClip getSpongebobFailSound() { return spongebobFailSound; }
-    public AudioClip getTacoBellSound() { return tacoBellSound; }
-    public AudioClip getUndertakersBellSound() { return undertakersBellSound; }
+    /** @return the vine boom non-interactive cell sound clip */
     public AudioClip getVineBoomSound() { return vineBoomSound; }
+    /** @return the violin screech used-cell sound clip */
     public AudioClip getViolinScreechSound() { return violinScreechSound; }
-    
+
     /**
      * Plays the provided audio clip from the start when it is available.
      *
@@ -261,13 +259,32 @@ public class SoundController {
     }
     
     /**
-     * Plays either the SpongeBob boowomp or fail sound at random.
+     * Plays one of the zero-score failure sounds at random.
      */
     public void playRandomZeroScoreSound() {
-        if (random.nextBoolean()) {
-            playClip(spongebobBoowompSound);
-        } else {
-            playClip(spongebobFailSound);
+        int choice = random.nextInt(3);
+        switch (choice) {
+            case 0 -> playClip(spongebobBoowompSound);
+            case 1 -> playClip(spongebobFailSound);
+            default -> playClip(buzzerErrorSound);
         }
+    }
+
+    /**
+     * Plays either the ding or answer correct sound when a positive score is recorded.
+     */
+    public void playRandomPositiveScoreSound() {
+        if (random.nextBoolean()) {
+            playClip(dingSound);
+        } else {
+            playClip(answerCorrectSound);
+        }
+    }
+
+    /**
+     * Plays the celebratory sound used for Yahtzee scores.
+     */
+    public void playYahtzeeCelebration() {
+        playClip(miBomboclatSound);
     }
 }

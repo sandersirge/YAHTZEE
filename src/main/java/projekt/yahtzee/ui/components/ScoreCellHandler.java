@@ -19,6 +19,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Handles scoreboard cell click and hover interactions.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class ScoreCellHandler {
     private static final int[] NON_INTERACTIVE_ROWS = {0, 7, 8, 16, 17};
@@ -27,6 +30,13 @@ public class ScoreCellHandler {
         throw new IllegalStateException("Utility class");
     }
 
+    /**
+     * Determines whether the given UI row index is a non-interactive row
+     * (header, bonus, upper sum, lower sum, or total).
+     *
+     * @param uiIndex the row index to check
+     * @return {@code true} if the row is non-interactive
+     */
     public static boolean isNonInteractiveRow(int uiIndex) {
         for (int row : NON_INTERACTIVE_ROWS) {
             if (row == uiIndex) {
@@ -72,7 +82,7 @@ public class ScoreCellHandler {
         
         // Attach click handlers to each player header cell.
         for (List<Label> playerColumn : playerColumns) {
-            Label nameCell = playerColumn.get(0);
+            Label nameCell = playerColumn.getFirst();
             nameCell.setOnMouseClicked(e -> {
                 // Play either the pan-hit or bonk sound at random.
                 soundController.playRandomPlayerNameClickSound();
@@ -91,9 +101,8 @@ public class ScoreCellHandler {
                 if (isNonInteractiveRow(uiIndex)) {
                     // Add the vine boom sound to non-interactive rows except the header.
                     if (uiIndex != 0) {
-                        scoreCell.setOnMouseClicked(e -> {
-                            soundController.playClip(soundController.getVineBoomSound());
-                        });
+                        scoreCell.setOnMouseClicked(e ->
+                            soundController.playClip(soundController.getVineBoomSound()));
                     }
                     continue;
                 }
@@ -144,10 +153,14 @@ public class ScoreCellHandler {
                     
                     // Choose an appropriate sound effect based on the score.
                     if (earnedPoints > 0) {
-                        // Positive score: play the ding sound.
-                        soundController.playClip(soundController.getDingSound());
+                        boolean isYahtzeeCombo = comboIndex == 11;
+                        if (isYahtzeeCombo && earnedPoints == 50) {
+                            soundController.playYahtzeeCelebration();
+                        } else {
+                            soundController.playRandomPositiveScoreSound();
+                        }
                     } else {
-                        // Zero score: play one of the SpongeBob clips at random.
+                        // Zero score: play one of the failure clips at random.
                         soundController.playRandomZeroScoreSound();
                     }
                     

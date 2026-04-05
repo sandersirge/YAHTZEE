@@ -12,6 +12,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import projekt.yahtzee.util.GameConstants;
+import projekt.yahtzee.util.UIFonts;
 import projekt.yahtzee.util.ResultsFileManager;
 import projekt.yahtzee.controller.data.StatisticsController;
 import projekt.yahtzee.controller.ui.SoundController;
@@ -27,6 +28,9 @@ import java.util.Map;
 
 /**
  * Manages the menu-related scenes: main menu, results view, and statistics view.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class MainMenuScene {
     private final ThemeController themeController;
@@ -63,7 +67,7 @@ public class MainMenuScene {
 
         // Title label with a background capsule sized to the label width.
         Label titleLabel = new Label(GameConstants.TITLE_WELCOME);
-        titleLabel.setFont(GameConstants.getLargeFont());
+        titleLabel.setFont(UIFonts.getLargeFont());
         titleLabel.setStyle(themeController.getLabelTextFill());
 
         StackPane titleContainer = new StackPane();
@@ -177,7 +181,7 @@ public class MainMenuScene {
 
         // Title label with a background capsule.
         Label titleLabel = new Label("TULEMUSED");
-        titleLabel.setFont(GameConstants.getLargeFont());
+        titleLabel.setFont(UIFonts.getLargeFont());
         titleLabel.setStyle(themeController.getLabelTextFill());
 
         StackPane titleContainer = new StackPane();
@@ -195,7 +199,7 @@ public class MainMenuScene {
         resultsBox.setStyle(resultsBoxStyle + " -fx-padding: 20; -fx-border-radius: 10; -fx-background-radius: 10;");
 
         Label resultsHeader = new Label(GameConstants.MSG_CURRENT_RESULTS);
-        resultsHeader.setFont(GameConstants.getCellFont());
+        resultsHeader.setFont(UIFonts.getCellFont());
         resultsHeader.setStyle(themeController.getLabelTextFill());
         resultsBox.getChildren().add(resultsHeader);
 
@@ -209,25 +213,25 @@ public class MainMenuScene {
                 }
                 hasVisibleLines = true;
                 Label resultLabel = new Label(line);
-                resultLabel.setFont(GameConstants.getCellFont());
+                resultLabel.setFont(UIFonts.getCellFont());
                 resultLabel.setStyle(themeController.getLabelTextFill());
                 resultsBox.getChildren().add(resultLabel);
             }
 
             if (!hasVisibleLines) {
                 Label emptyLabel = new Label("Tulemusi ei leitud");
-                emptyLabel.setFont(GameConstants.getCellFont());
+                emptyLabel.setFont(UIFonts.getCellFont());
                 emptyLabel.setStyle(themeController.getLabelTextFill());
                 resultsBox.getChildren().add(emptyLabel);
             }
         } catch (NoSuchFileException ex) {
             Label errorLabel = new Label("Tulemusi ei leitud");
-            errorLabel.setFont(GameConstants.getCellFont());
+            errorLabel.setFont(UIFonts.getCellFont());
             errorLabel.setStyle(themeController.getLabelTextFill());
             resultsBox.getChildren().add(errorLabel);
         } catch (IOException ex) {
             Label errorLabel = new Label("Viga tulemuste lugemisel: " + ex.getMessage());
-            errorLabel.setFont(GameConstants.getCellFont());
+            errorLabel.setFont(UIFonts.getCellFont());
             errorLabel.setStyle(themeController.getLabelTextFill());
             resultsBox.getChildren().add(errorLabel);
         }
@@ -238,9 +242,7 @@ public class MainMenuScene {
         backButton.setScaleY(GameConstants.SCALE_BUTTON_MEDIUM);
         backButton.setStyle(GameConstants.BUTTON_ERROR_STYLE);
         UIHelper.attachButtonAnimations(backButton, soundController);
-        backButton.setOnAction(e -> {
-            stage.setScene(createMainMenu(this.onNewGame));
-        });
+        backButton.setOnAction(e -> stage.setScene(createMainMenu(this.onNewGame)));
 
         resultsContainer.getChildren().addAll(titleContainer, resultsBox, backButton);
 
@@ -269,7 +271,7 @@ public class MainMenuScene {
 
         // Title label with a background capsule.
         Label titleLabel = new Label("STATISTIKA");
-        titleLabel.setFont(GameConstants.getLargeFont());
+        titleLabel.setFont(UIFonts.getLargeFont());
         titleLabel.setStyle(themeController.getLabelTextFill());
 
         StackPane titleContainer = new StackPane();
@@ -286,11 +288,11 @@ public class MainMenuScene {
         summaryStats.setStyle(summaryStatsStyle + " -fx-padding: 20; -fx-border-radius: 10; -fx-background-radius: 10;");
 
         Label summaryTitleLabel = new Label("ÜLDINE STATISTIKA");
-        summaryTitleLabel.setFont(GameConstants.getCellFontBold());
+        summaryTitleLabel.setFont(UIFonts.getCellFontBold());
         summaryTitleLabel.setStyle(themeController.getLabelTextFill());
 
         Label totalGamesLabel = new Label("Mängitud mänge: " + statisticsController.getTotalGames());
-        totalGamesLabel.setFont(GameConstants.getCellFont());
+        totalGamesLabel.setFont(UIFonts.getCellFont());
         totalGamesLabel.setStyle(themeController.getLabelTextFill());
 
         String highestScoreText = "Kõrgeim skoor: " + statisticsController.getHighestScore();
@@ -298,11 +300,11 @@ public class MainMenuScene {
             highestScoreText += " (" + statisticsController.getHighestScorePlayer() + ")";
         }
         Label highestScoreLabel = new Label(highestScoreText);
-        highestScoreLabel.setFont(GameConstants.getCellFont());
+        highestScoreLabel.setFont(UIFonts.getCellFont());
         highestScoreLabel.setStyle(themeController.getLabelTextFill());
 
         Label averageScoreLabel = new Label(String.format("Keskmine skoor: %.1f", statisticsController.getAverageScore()));
-        averageScoreLabel.setFont(GameConstants.getCellFont());
+        averageScoreLabel.setFont(UIFonts.getCellFont());
         averageScoreLabel.setStyle(themeController.getLabelTextFill());
 
         summaryStats.getChildren().addAll(summaryTitleLabel, totalGamesLabel, highestScoreLabel, averageScoreLabel);
@@ -315,7 +317,7 @@ public class MainMenuScene {
         playerStatsContainer.setStyle(playerStatsStyle + " -fx-padding: 20; -fx-border-radius: 10; -fx-background-radius: 10;");
 
         Label playerStatsTitle = new Label("MÄNGIJATE STATISTIKA");
-        playerStatsTitle.setFont(GameConstants.getCellFontBold());
+        playerStatsTitle.setFont(UIFonts.getCellFontBold());
         playerStatsTitle.setStyle(themeController.getLabelTextFill());
         playerStatsContainer.getChildren().add(playerStatsTitle);
 
@@ -332,7 +334,7 @@ public class MainMenuScene {
 
         if (sortedPlayers.isEmpty()) {
             Label emptyLabel = new Label("Statistika puudub - mängi esimene mäng!");
-            emptyLabel.setFont(GameConstants.getCellFont());
+            emptyLabel.setFont(UIFonts.getCellFont());
             emptyLabel.setStyle(themeController.getLabelTextFill());
             playerStatsContainer.getChildren().add(emptyLabel);
         } else {
@@ -345,12 +347,12 @@ public class MainMenuScene {
 
                 VBox playerInfo = new VBox(5);
                 Label nameLabel = new Label(name);
-                nameLabel.setFont(GameConstants.getCellFontBold());
+                nameLabel.setFont(UIFonts.getCellFontBold());
                 nameLabel.setStyle(themeController.getLabelTextFill());
 
                 Label infoLabel = new Label(String.format("Võite: %d/%d (%.1f%%) | Parim skoor: %d",
                                                           winCount, gamesCount, winPercentage, bestScore));
-                infoLabel.setFont(GameConstants.getCellFont());
+                infoLabel.setFont(UIFonts.getCellFont());
                 infoLabel.setStyle(themeController.getLabelTextFill());
 
                 playerInfo.getChildren().addAll(nameLabel, infoLabel);
@@ -363,9 +365,7 @@ public class MainMenuScene {
         backButton.setScaleY(GameConstants.SCALE_BUTTON_MEDIUM);
         backButton.setStyle(GameConstants.BUTTON_ERROR_STYLE);
         UIHelper.attachButtonAnimations(backButton, soundController);
-        backButton.setOnAction(e -> {
-            stage.setScene(createMainMenu(this.onNewGame));
-        });
+        backButton.setOnAction(e -> stage.setScene(createMainMenu(this.onNewGame)));
 
         content.getChildren().addAll(titleContainer, summaryStats, playerStatsContainer, backButton);
 

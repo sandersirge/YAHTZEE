@@ -12,6 +12,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import projekt.yahtzee.controller.game.GameController;
 import projekt.yahtzee.util.GameConstants;
+import projekt.yahtzee.util.UIFonts;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +21,8 @@ import java.util.List;
  * Manages the scoreboard UI for the Yahtzee game.
  * Handles creation of scoreboard columns, score display, and player highlighting.
  * 
- * @author Yahtzee Game Project
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class ScoreboardController {
     private final ThemeController themeController;
@@ -29,17 +30,14 @@ public class ScoreboardController {
     private final List<String> playerNames;
     private Label focusedCell;
     private String focusedCellBaseStyle;
-    private int focusedPlayerIndex = -1;
-    private int focusedRowIndex = -1;
-    
+
     /**
      * Constructs a new scoreboard manager.
      * 
-     * @param gameController the game controller instance
      * @param themeController the theme controller instance
      * @param playerNames list of player names
      */
-    public ScoreboardController(GameController gameController, ThemeController themeController, List<String> playerNames) {
+    public ScoreboardController(ThemeController themeController, List<String> playerNames) {
         this.themeController = themeController;
         this.playerNames = playerNames;
         this.playerColumns = new ArrayList<>();
@@ -120,7 +118,7 @@ public class ScoreboardController {
         // Style combo name cells.
         for (int i = 0; i < comboNames.size(); i++) {
             Label label = comboNames.get(i);
-            label.setFont(GameConstants.getCellFontBold());
+            label.setFont(UIFonts.getCellFontBold());
             label.setPrefWidth(GameConstants.COMBO_COLUMN_WIDTH);
             label.setAlignment(Pos.CENTER);
             label.setStyle(GameConstants.CELL_BORDER_STYLE + "-fx-background-color: " + themeController.getComboColumnBackground() + ";" + themeController.getLabelTextFill());
@@ -165,7 +163,7 @@ public class ScoreboardController {
         
         // Player name header.
         Label nameLabel = new Label(playerName);
-        nameLabel.setFont(GameConstants.getCellFontBold());
+        nameLabel.setFont(UIFonts.getCellFontBold());
         nameLabel.setMinWidth(columnWidth);
         nameLabel.setPrefWidth(columnWidth);
         nameLabel.setMaxWidth(Double.MAX_VALUE);
@@ -218,6 +216,9 @@ public class ScoreboardController {
         return playerColumns;
     }
 
+    /**
+     * Removes the keyboard-focus highlight from the currently focused cell.
+     */
     public void clearKeyboardFocus() {
         if (focusedCell != null) {
             if (focusedCellBaseStyle == null || focusedCellBaseStyle.isEmpty()) {
@@ -228,10 +229,14 @@ public class ScoreboardController {
         }
         focusedCell = null;
         focusedCellBaseStyle = null;
-        focusedPlayerIndex = -1;
-        focusedRowIndex = -1;
     }
 
+    /**
+     * Applies the keyboard-focus highlight to a specific scoreboard cell.
+     *
+     * @param playerIndex column index of the player
+     * @param rowIndex    row index within the column
+     */
     public void setKeyboardFocus(int playerIndex, int rowIndex) {
         if (playerIndex < 0 || playerIndex >= playerColumns.size()) {
             clearKeyboardFocus();
@@ -253,19 +258,9 @@ public class ScoreboardController {
         focusedCell = newCell;
         String baseStyle = newCell.getStyle();
         focusedCellBaseStyle = baseStyle == null ? "" : baseStyle;
-        focusedPlayerIndex = playerIndex;
-        focusedRowIndex = rowIndex;
         newCell.setStyle(focusedCellBaseStyle + themeController.getKeyboardFocusDecoration());
     }
 
-    public int getFocusedPlayerIndex() {
-        return focusedPlayerIndex;
-    }
-
-    public int getFocusedRowIndex() {
-        return focusedRowIndex;
-    }
-    
     /**
      * Highlights the active player's column.
      * 
@@ -275,28 +270,12 @@ public class ScoreboardController {
         clearKeyboardFocus();
         // Remove highlight from all players.
         for (List<Label> column : playerColumns) {
-            column.get(0).setStyle(themeController.getPlayerHeaderStyle());
+            column.getFirst().setStyle(themeController.getPlayerHeaderStyle());
         }
         
         // Highlight current player column.
         if (playerIndex >= 0 && playerIndex < playerColumns.size()) {
-            playerColumns.get(playerIndex).get(0).setStyle(themeController.getActivePlayerStyle());
-        }
-    }
-    
-    /**
-     * Updates a score cell with a value.
-     * 
-     * @param playerIndex the player's column index
-     * @param rowIndex the row index (1-17, 0 is player name)
-     * @param value the value to display
-     */
-    public void updateScore(int playerIndex, int rowIndex, String value) {
-        if (playerIndex >= 0 && playerIndex < playerColumns.size()) {
-            List<Label> column = playerColumns.get(playerIndex);
-            if (rowIndex >= 0 && rowIndex < column.size()) {
-                column.get(rowIndex).setText(value);
-            }
+            playerColumns.get(playerIndex).getFirst().setStyle(themeController.getActivePlayerStyle());
         }
     }
     

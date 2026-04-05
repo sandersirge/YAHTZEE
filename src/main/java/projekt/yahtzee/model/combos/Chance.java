@@ -7,17 +7,15 @@ import java.util.List;
  * Always valid with any dice values.
  * Scores the sum of all five dice.
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class Chance extends Combination {
     /**
      * Constructs a Chance combination.
-     * 
-     * @param index the position of this combination in the score sheet
      */
-    public Chance(int index) {
-        super("Chance", index);
+    public Chance() {
+        super("Chance");
     }
     
     /**
@@ -29,11 +27,7 @@ public class Chance extends Combination {
      */
     @Override
     public int calculatePoints(List<Integer> values) {
-        int sum = 0;
-        for (Integer v : values) {
-            sum += v;
-        }
-        return sum;
+        return sumAll(values);
     }
     
     /**

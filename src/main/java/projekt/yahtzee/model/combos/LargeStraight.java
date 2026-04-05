@@ -9,17 +9,15 @@ import java.util.Set;
  * Requires all 5 dice to form a consecutive sequence.
  * Always scores 40 points when valid.
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class LargeStraight extends Combination {
     /**
      * Constructs a Large Straight combination.
-     * 
-     * @param index the position of this combination in the score sheet
      */
-    public LargeStraight(int index) {
-        super("Large Straight", index);
+    public LargeStraight() {
+        super("Large Straight");
     }
     
     /**

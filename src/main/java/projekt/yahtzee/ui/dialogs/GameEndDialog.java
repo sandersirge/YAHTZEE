@@ -14,6 +14,7 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.text.Font;
 import projekt.yahtzee.model.Player;
 import projekt.yahtzee.util.GameConstants;
+import projekt.yahtzee.util.UIFonts;
 import projekt.yahtzee.controller.game.GameController;
 import projekt.yahtzee.util.ResultsFileManager;
 import projekt.yahtzee.controller.ui.SoundController;
@@ -27,8 +28,8 @@ import java.util.ArrayList;
 /**
  * Creates and displays the game end dialog with results.
  * 
- * @author Yahtzee Game Project
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class GameEndDialog {
     private final Stage ownerStage;
@@ -62,7 +63,7 @@ public class GameEndDialog {
     /**
      * Handles game end: displays winners, saves results, and shows end dialog.
      * 
-     * @param teavitused Label to display winner message
+     * @param statusLabel Label to display winner message
      */
     public void handleGameEnd(Label statusLabel) {
         // Retrieve winners from the controller.
@@ -72,8 +73,8 @@ public class GameEndDialog {
         // Build the winner summary string.
         StringBuilder winnerText = new StringBuilder("MÄNG LÄBI!\n\n");
         if (winners.size() == 1) {
-            winnerText.append("VÕITJA: ").append(winners.get(0).getPlayerName())
-                      .append("\nSKOOR: ").append(winners.get(0).getTotalScore());
+            winnerText.append("VÕITJA: ").append(winners.getFirst().getPlayerName())
+                      .append("\nSKOOR: ").append(winners.getFirst().getTotalScore());
         } else {
             winnerText.append("VIIK! VÕITJAD:\n");
             for (Player winner : winners) {
@@ -103,8 +104,8 @@ public class GameEndDialog {
             soundController.playClip(soundController.getWowSound());
         }
         
-        Font boldFont = GameConstants.getCellFontBold();
-        Font regularFont = GameConstants.getCellFont();
+        Font boldFont = UIFonts.getCellFontBold();
+        Font regularFont = UIFonts.getCellFont();
 
         List<String> resultRows = new ArrayList<>();
         for (int i = 0; i < sortedPlayers.size(); i++) {
@@ -127,8 +128,7 @@ public class GameEndDialog {
 
         double desiredInnerWidth = Math.max(winnerLineWidth + winnerBoxPadding,
             Math.max(420, Math.max(titleWidth + resultsBoxPadding, resultsLineWidth + resultsBoxPadding)));
-        double preferredWidth = Math.max(containerMinWidth,
-            Math.min(containerMaxWidth, desiredInnerWidth + containerPadding));
+        double preferredWidth = Math.clamp(desiredInnerWidth + containerPadding, containerMinWidth, containerMaxWidth);
         double contentAreaWidth = preferredWidth - containerPadding;
         double winnerLabelMaxWidth = Math.max(0, contentAreaWidth - winnerBoxPadding);
         double resultLabelMaxWidth = Math.max(0, contentAreaWidth - resultsBoxPadding);

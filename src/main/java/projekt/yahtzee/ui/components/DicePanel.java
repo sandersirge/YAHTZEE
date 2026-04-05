@@ -20,7 +20,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
-import projekt.yahtzee.model.Die;
 import projekt.yahtzee.util.GameConstants;
 import projekt.yahtzee.controller.ui.ThemeController;
 import projekt.yahtzee.util.ResourceLoader;
@@ -38,8 +37,8 @@ import java.util.Random;
  * Manages the dice panel UI for the Yahtzee game.
  * Handles dice display, animations, and keep/roll checkboxes.
  * 
- * @author Yahtzee Game Project
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class DicePanel {
     private static final int DICE_FACE_COUNT = 6;
@@ -57,9 +56,8 @@ public class DicePanel {
      * Constructs a new dice panel.
      * 
      * @param themeController the theme manager instance
-     * @param dice list of dice from game manager
      */
-    public DicePanel(ThemeController themeController, List<Die> dice) {
+    public DicePanel(ThemeController themeController) {
         this.themeController = themeController;
         this.diceImages = new ArrayList<>();
         this.keepIndicators = new ArrayList<>();
@@ -171,9 +169,8 @@ public class DicePanel {
     }
 
     /**
-     * Loads a dice image for a specific value.
-     * 
-     * @param imageView the ImageView to load the image into
+     * Loads a die image for a specific value.
+     *
      * @param value the dice value (1-6)
      */
     private Image loadDiceImage(int value) {
@@ -281,15 +278,6 @@ public class DicePanel {
     }
     
     /**
-     * Gets the keep checkboxes.
-     * 
-     * @return list of checkboxes
-     */
-    public List<Label> getKeepIndicators() {
-        return keepIndicators;
-    }
-    
-    /**
      * Gets the keep status as an array.
      * 
      * @return array where 0 means roll, 1 means keep
@@ -327,15 +315,12 @@ public class DicePanel {
         updateDiceCursors(disabled);
     }
     
-    /**
-     * Gets the dice images.
-     * 
-     * @return list of dice image views
-     */
-    public List<ImageView> getDiceImages() {
-        return diceImages;
-    }
 
+    /**
+     * Sets the index of the keyboard-focused die. Pass -1 to clear focus.
+     *
+     * @param index die index (0-based), or -1 to clear
+     */
     public void setFocusedDieIndex(int index) {
         if (index < -1 || index >= diceImages.size()) {
             return;
@@ -344,10 +329,20 @@ public class DicePanel {
         refreshDiceEffects();
     }
 
+    /**
+     * Gets the index of the currently keyboard-focused die.
+     *
+     * @return focused die index, or -1 if none
+     */
     public int getFocusedDieIndex() {
         return focusedDieIndex;
     }
 
+    /**
+     * Toggles the keep state of the die at the given index.
+     *
+     * @param index the die index to toggle (0-based)
+     */
     public void toggleKeep(int index) {
         if (index < 0 || index >= keepIndicators.size()) {
             return;
@@ -360,22 +355,12 @@ public class DicePanel {
         refreshDiceEffects();
     }
 
-    public void setKeepSelected(int index, boolean selected) {
-        if (index < 0 || index >= keepIndicators.size()) {
-            return;
-        }
-        keepSelected[index] = selected;
-        updateIndicatorVisual(index);
-        refreshDiceEffects();
-    }
 
-    public boolean isKeepSelected(int index) {
-        if (index < 0 || index >= keepIndicators.size()) {
-            return false;
-        }
-        return keepSelected[index];
-    }
-
+    /**
+     * Checks whether all keep checkboxes are currently disabled.
+     *
+     * @return {@code true} if every checkbox is disabled
+     */
     public boolean areCheckboxesDisabled() {
         for (boolean disabled : keepDisabled) {
             if (!disabled) {
@@ -385,6 +370,12 @@ public class DicePanel {
         return true;
     }
 
+    /**
+     * Re-applies keep selections after dice are sorted, mapping kept values to their new positions.
+     *
+     * @param keptValueCounts map of dice values to the number of kept dice with that value
+     * @param sortedValues    the sorted dice values after the roll
+     */
     public void syncKeepSelections(Map<Integer, Integer> keptValueCounts, List<Integer> sortedValues) {
         Arrays.fill(keepSelected, false);
         for (int i = 0; i < sortedValues.size() && i < keepSelected.length; i++) {

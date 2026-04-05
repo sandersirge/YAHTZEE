@@ -28,6 +28,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Builds and orchestrates the main game board scene, including dice controls and the scoreboard.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class GameBoardScene {
     private final GameController gameController;
@@ -64,20 +67,19 @@ public class GameBoardScene {
         playGameStartSound();
         
         // Initialize game state collections.
-        final List<List<Label>> playerColumns = new ArrayList<>();
         final List<List<Integer>> playerUsedCombinations = new ArrayList<>();
         final List<Integer> diceValues = new ArrayList<>();
         final AtomicInteger playerTurnCounter = new AtomicInteger(0);
         
         // Build primary layout containers.
         StackPane boardRoot = createMainLayout();
-        HBox layoutContent = (HBox) boardRoot.getChildren().get(0);
-        
+        HBox layoutContent = (HBox) boardRoot.getChildren().getFirst();
+
         // Create scoreboard first to obtain controller instance.
         List<String> playerNames = initializePlayers(nameFields);
-        final ScoreboardController scoreboardController = new ScoreboardController(gameController, themeController, playerNames);
+        final ScoreboardController scoreboardController = new ScoreboardController(themeController, playerNames);
         HBox scoreboardUI = scoreboardController.createScoreboard();
-        playerColumns.addAll(scoreboardController.getPlayerColumns());
+        final List<List<Label>> playerColumns = new ArrayList<>(scoreboardController.getPlayerColumns());
         scoreboardUI.setMinHeight(0);
         scoreboardUI.setMaxHeight(Double.MAX_VALUE);
         
@@ -143,7 +145,6 @@ public class GameBoardScene {
             diceSection.getExitButton(),
             diceSection.getDicePanel(),
             scoreboardController,
-            diceSection.getStatusLabel(),
             playerColumns,
             playerTurnCounter,
             playerUsedCombinations,
@@ -217,12 +218,10 @@ public class GameBoardScene {
      * Attaches the vine boom sound effect to the combo name column.
      */
     private void addComboNameSounds(HBox scoreboardUI) {
-        VBox comboNameColumn = (VBox) scoreboardUI.getChildren().get(0);
+        VBox comboNameColumn = (VBox) scoreboardUI.getChildren().getFirst();
         for (Node node : comboNameColumn.getChildren()) {
-            if (node instanceof Label) {
-                ((Label) node).setOnMouseClicked(e -> {
-                    soundController.playClip(soundController.getVineBoomSound());
-                });
+            if (node instanceof Label label) {
+                label.setOnMouseClicked(e -> soundController.playClip(soundController.getVineBoomSound()));
             }
         }
     }

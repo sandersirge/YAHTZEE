@@ -12,8 +12,8 @@ import java.util.*;
  * Handles player turns, dice rolling, scoring, and bonus calculations.
  * Does not contain any UI logic - that's handled by the JavaFX components.
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class GameController {
     private final List<Player> players;
@@ -240,11 +240,11 @@ public class GameController {
         if (players.isEmpty()) return new ArrayList<>();
         
         List<Player> sortedPlayers = new ArrayList<>(players);
-        Collections.sort(sortedPlayers, Collections.reverseOrder());
-        
+        sortedPlayers.sort(Collections.reverseOrder());
+
         List<Player> winners = new ArrayList<>();
-        int highestScore = sortedPlayers.get(0).getTotalScore();
-        
+        int highestScore = sortedPlayers.getFirst().getTotalScore();
+
         for (Player player : sortedPlayers) {
             if (player.getTotalScore() == highestScore) {
                 winners.add(player);
@@ -263,7 +263,7 @@ public class GameController {
      */
     public List<Player> getSortedPlayers() {
         List<Player> sorted = new ArrayList<>(players);
-        Collections.sort(sorted, Collections.reverseOrder());
+        sorted.sort(Collections.reverseOrder());
         return sorted;
     }
 }

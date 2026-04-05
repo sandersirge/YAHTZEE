@@ -17,11 +17,15 @@ import projekt.yahtzee.controller.ui.SoundController;
 import projekt.yahtzee.controller.ui.ThemeController;
 import projekt.yahtzee.ui.handlers.UIHelper;
 import projekt.yahtzee.util.GameConstants;
+import projekt.yahtzee.util.UIFonts;
 
 import java.util.List;
 
 /**
  * Displays the in-game keyboard help in a themed dialog.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public final class HelpDialog {
     private HelpDialog() {
@@ -45,8 +49,8 @@ public final class HelpDialog {
         helpStage.initOwner(ownerStage);
         helpStage.setTitle("Klaviatuuri juhised");
 
-        Font titleFont = GameConstants.getCellFontBold();
-        Font lineFont = GameConstants.getCellFont();
+        Font titleFont = UIFonts.getCellFontBold();
+        Font lineFont = UIFonts.getCellFont();
 
         double containerPadding = 80;
         double cardHorizontalPadding = 40;
@@ -55,14 +59,14 @@ public final class HelpDialog {
 
         double titleWidth = DialogLayoutUtil.measureTextWidth("Klaviatuuri kiirklahvid", titleFont);
         double linesWidth = helpLines.stream()
-            .map(line -> "\u2022 " + line)
+            .map(line -> "• " + line)
             .mapToDouble(text -> DialogLayoutUtil.measureTextWidth(text, lineFont))
             .max().orElse(0.0);
 
         double desiredInnerWidth = Math.max(titleWidth + cardHorizontalPadding,
             Math.max(420, linesWidth + cardHorizontalPadding));
-        double preferredWidth = Math.max(containerMinWidth,
-            Math.min(containerMaxWidth, desiredInnerWidth + containerPadding));
+        double preferredWidth = Math.clamp(desiredInnerWidth + containerPadding,
+            containerMinWidth, containerMaxWidth);
         double contentAreaWidth = preferredWidth - containerPadding;
         double lineMaxWidth = Math.max(0, contentAreaWidth - cardHorizontalPadding);
 
@@ -91,7 +95,7 @@ public final class HelpDialog {
         helpCard.setStyle(cardStyle + " -fx-background-radius: 12; -fx-border-radius: 12;");
 
         for (String line : helpLines) {
-            Label lineLabel = new Label("\u2022 " + line);
+            Label lineLabel = new Label("• " + line);
             lineLabel.setFont(lineFont);
             lineLabel.setStyle(themeController.getLabelTextFill());
             lineLabel.setWrapText(true);

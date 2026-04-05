@@ -6,8 +6,8 @@ import java.util.List;
  * Represents the upper section number combinations (Ones, Twos, Threes, Fours, Fives, Sixes).
  * Scores the sum of all dice matching the target number.
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class Numbers extends Combination {
     private final int targetNumber;
@@ -16,11 +16,10 @@ public class Numbers extends Combination {
      * Constructs a Numbers combination for a specific target number.
      * 
      * @param comboName the display name (e.g., "Ones", "Twos")
-     * @param index the position of this combination in the score sheet
      * @param number the target number to count (1-6)
      */
-    public Numbers(String comboName, int index, int number) {
-        super(comboName, index);
+    public Numbers(String comboName, int number) {
+        super(comboName);
         this.targetNumber = number;
     }
     

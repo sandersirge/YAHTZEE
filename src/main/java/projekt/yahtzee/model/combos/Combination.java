@@ -6,22 +6,19 @@ import java.util.List;
  * Abstract base class representing a scoring combination in Yahtzee.
  * Each concrete implementation defines a specific scoring rule and validation logic.
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public abstract class Combination {
     private final String comboName;
-    private final int index;
-    
+
     /**
-     * Constructs a new combination with a name and index.
-     * 
+     * Constructs a new combination with a name.
+     *
      * @param comboName the display name of this combination
-     * @param index the position of this combination in the score sheet (0-12)
      */
-    public Combination(String comboName, int index) {
+    public Combination(String comboName) {
         this.comboName = comboName;
-        this.index = index;
     }
     
     /**
@@ -31,15 +28,6 @@ public abstract class Combination {
      */
     public String getComboName() {
         return comboName;
-    }
-    
-    /**
-     * Gets the index of this combination in the score sheet.
-     * 
-     * @return the combination index (0-12)
-     */
-    public int getIndex() {
-        return index;
     }
     
     /**
@@ -58,6 +46,21 @@ public abstract class Combination {
      * @return true if the combination is valid, false otherwise
      */
     public abstract boolean isPossible(List<Integer> values);
+
+    /**
+     * Returns the sum of all dice values in the list.
+     * Shared helper used by Chance, ThreeOfKind, and FourOfKind.
+     *
+     * @param values the list of dice values
+     * @return the total sum of all values
+     */
+    protected int sumAll(List<Integer> values) {
+        int sum = 0;
+        for (int v : values) {
+            sum += v;
+        }
+        return sum;
+    }
 
     /**
      * Returns the string representation of this combination.

@@ -8,11 +8,11 @@ import java.util.List;
  * Tracks player score, used combinations, and game statistics.
  * Players are comparable based on their total score.
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class Player implements Comparable<Player> {
-    private String playerName;
+    private final String playerName;
     private int totalScore;
     private int[] usedCombos;
     private int upperSectionScore;
@@ -45,15 +45,6 @@ public class Player implements Comparable<Player> {
      */
     public String getPlayerName() {
         return playerName;
-    }
-    
-    /**
-     * Sets the player's name.
-     * 
-     * @param playerName the new player name
-     */
-    public void setPlayerName(String playerName) {
-        this.playerName = playerName;
     }
     
     /**
@@ -181,29 +172,21 @@ public class Player implements Comparable<Player> {
     }
     
     /**
-     * Creates a formatted string displaying all rolled combinations and their scores.
-     * 
-     * @return formatted string of all rolled combinations
-     */
-    public String displayCombos() {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < rolledComboNames.size(); i++) {
-            result.append("\n").append(rolledComboNames.get(i))
-                  .append(" - earned points: ").append(rolledComboScores.get(i));
-        }
-        return result + "\n";
-    }
-    
-    /**
      * Returns a string representation of the player including name, score, and all rolled combinations.
      * 
      * @return formatted player information
      */
     @Override
     public String toString() {
+        StringBuilder combos = new StringBuilder();
+        for (int i = 0; i < rolledComboNames.size(); i++) {
+            combos.append("\n").append(rolledComboNames.get(i))
+                  .append(" - earned points: ").append(rolledComboScores.get(i));
+        }
+        combos.append("\n");
         return "PLAYER NAME: " + playerName + "\n" +
                "SCORE: [ " + totalScore + " ]\n" +
-               "ROLLED COMBOS:" + displayCombos();
+               "ROLLED COMBOS:" + combos;
     }
     
     /**

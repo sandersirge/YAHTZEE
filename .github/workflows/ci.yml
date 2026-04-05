@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    name: Build & Test (JDK ${{ matrix.java }})
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        java: ['21']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+          cache: gradle
+
+      - name: Install display + JavaFX native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1 libgtk-3-0 libxtst6 libxrender1 libxi6
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Compile
+        run: ./gradlew compileJava --no-daemon
+
+      - name: Run tests (headless via Xvfb)
+        run: |
+          xvfb-run --auto-servernum --server-args='-screen 0 1280x800x24' \
+            ./gradlew test --no-daemon \
+            -Dtestfx.headless=true \
+            -Dprism.order=sw \
+            -Djava.awt.headless=true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-jdk${{ matrix.java }}
+          path: build/reports/tests/test/
+

@@ -5,6 +5,9 @@ import javafx.scene.text.Text;
 
 /**
  * Shared helpers for measuring text when sizing themed dialogs.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public final class DialogLayoutUtil {
     private DialogLayoutUtil() {

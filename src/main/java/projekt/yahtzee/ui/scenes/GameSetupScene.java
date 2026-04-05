@@ -12,6 +12,7 @@ import projekt.yahtzee.controller.ui.SoundController;
 import projekt.yahtzee.controller.ui.ThemeController;
 import projekt.yahtzee.ui.handlers.UIHelper;
 import projekt.yahtzee.util.GameConstants;
+import projekt.yahtzee.util.UIFonts;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,11 +20,20 @@ import java.util.function.Consumer;
 
 /**
  * Manages the setup scene where players enter how many people are participating and their names.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class GameSetupScene {
     private final ThemeController themeController;
     private final SoundController soundController;
 
+    /**
+     * Constructs a new setup scene manager.
+     *
+     * @param themeController controller providing theme-dependent styles
+     * @param soundController controller responsible for playing sounds
+     */
     public GameSetupScene(ThemeController themeController, SoundController soundController) {
         this.themeController = themeController;
         this.soundController = soundController;
@@ -56,7 +66,7 @@ public class GameSetupScene {
 
         // Title label.
         Label titleLabel = new Label(GameConstants.LABEL_PLAYER_COUNT);
-        titleLabel.setFont(GameConstants.getTitleFont());
+        titleLabel.setFont(UIFonts.getTitleFont());
         titleLabel.setStyle(themeController.getLabelTextFill());
 
         StackPane titleContainer = new StackPane();
@@ -68,7 +78,7 @@ public class GameSetupScene {
         
         // Warning banner.
         Label warningLabel = new Label();
-        warningLabel.setFont(GameConstants.getMediumFont());
+        warningLabel.setFont(UIFonts.getMediumFont());
         warningLabel.setStyle("-fx-text-fill: white;");
 
         StackPane warningContainer = new StackPane();
@@ -119,8 +129,7 @@ public class GameSetupScene {
         List<TextField> playerNameFields = new ArrayList<>();
 
         // React to player-count changes.
-        playerCountField.textProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater(() -> {
+        playerCountField.textProperty().addListener((observable, oldValue, newValue) -> Platform.runLater(() -> {
                 try {
                     if (newValue.equalsIgnoreCase("")) throw new IllegalArgumentException();
                     int playerCount = Integer.parseInt(newValue);
@@ -159,9 +168,8 @@ public class GameSetupScene {
                     buttonRow.getChildren().clear();
                     buttonRow.getChildren().add(backButton);
                 }
-            });
-        });
-        
+            }));
+
         // Configure start-button action.
         startButton.setOnAction(e -> onStartGame.accept(playerNameFields));
 
@@ -178,9 +186,8 @@ public class GameSetupScene {
      * Adds a focus listener that switches the text field style when focus changes.
      */
     private void addTextFieldFocusListener(TextField field) {
-        field.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            field.setStyle(themeController.getTextFieldStyle(newVal));
-        });
+        field.focusedProperty().addListener((obs, oldVal, newVal) ->
+            field.setStyle(themeController.getTextFieldStyle(newVal)));
     }
     
     /**

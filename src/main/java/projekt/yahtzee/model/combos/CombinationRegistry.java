@@ -7,8 +7,8 @@ import java.util.List;
  * Registry that manages all available Yahtzee scoring combinations.
  * Creates and stores all 13 combinations (6 upper section + 7 lower section).
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class CombinationRegistry {
     private final List<Combination> allCombos;
@@ -28,21 +28,21 @@ public class CombinationRegistry {
      */
     private void initCombos() {
         // Upper section (numbers 1-6)
-        allCombos.add(new Numbers("Ones", 0, 1));
-        allCombos.add(new Numbers("Twos", 1, 2));
-        allCombos.add(new Numbers("Threes", 2, 3));
-        allCombos.add(new Numbers("Fours", 3, 4));
-        allCombos.add(new Numbers("Fives", 4, 5));
-        allCombos.add(new Numbers("Sixes", 5, 6));
-        
+        allCombos.add(new Numbers("Ones", 1));
+        allCombos.add(new Numbers("Twos", 2));
+        allCombos.add(new Numbers("Threes", 3));
+        allCombos.add(new Numbers("Fours", 4));
+        allCombos.add(new Numbers("Fives", 5));
+        allCombos.add(new Numbers("Sixes", 6));
+
         // Lower section (combinations)
-        allCombos.add(new ThreeOfKind(6));
-        allCombos.add(new FourOfKind(7));
-        allCombos.add(new FullHouse(8));
-        allCombos.add(new SmallStraight(9));
-        allCombos.add(new LargeStraight(10));
-        allCombos.add(new YahtzeeCombination(11));
-        allCombos.add(new Chance(12));
+        allCombos.add(new ThreeOfKind());
+        allCombos.add(new FourOfKind());
+        allCombos.add(new FullHouse());
+        allCombos.add(new SmallStraight());
+        allCombos.add(new LargeStraight());
+        allCombos.add(new YahtzeeCombination());
+        allCombos.add(new Chance());
     }
     
     /**

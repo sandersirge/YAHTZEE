@@ -3,12 +3,12 @@ package projekt.yahtzee.util;
 import projekt.yahtzee.model.Player;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -16,8 +16,8 @@ import java.util.List;
 /**
  * Manages saving game results to file.
  * 
- * @author Yahtzee Game Project
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class ResultsFileManager {
     
@@ -27,7 +27,11 @@ public class ResultsFileManager {
      * @param sortedPlayers players sorted by score
      */
     public static void saveResults(List<Player> sortedPlayers) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(GameConstants.RESULTS_FILE, true))) {
+        try (BufferedWriter writer = Files.newBufferedWriter(
+                Paths.get(GameConstants.RESULTS_FILE),
+                StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND)) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
             writer.write("\n=== GAME " + LocalDateTime.now().format(formatter) + " ===\n");
             

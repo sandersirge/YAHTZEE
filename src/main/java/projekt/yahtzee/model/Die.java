@@ -5,8 +5,8 @@ package projekt.yahtzee.model;
  * The die can be rolled to generate random values from 1 to 6.
  * Implements Rollable for rolling behavior and Comparable for sorting.
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class Die implements Rollable, Comparable<Die> {
     private int currentValue;

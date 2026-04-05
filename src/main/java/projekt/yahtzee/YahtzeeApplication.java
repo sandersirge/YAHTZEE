@@ -11,6 +11,13 @@ import projekt.yahtzee.ui.navigation.SceneManager;
 
 import java.util.List;
 
+/**
+ * Main entry point for the Yahtzee JavaFX application.
+ * Wires controllers and manages scene navigation.
+ *
+ * @author sandersirge
+ * @version 1.1.0
+ */
 public class YahtzeeApplication extends Application {
     private SceneManager sceneManager;
     private SoundController soundController;
@@ -59,6 +66,7 @@ public class YahtzeeApplication extends Application {
         showMainMenu();
     }
 
+    @SuppressWarnings("unused")
     public static void main(String[] args) {
         launch(args);
     }

@@ -15,12 +15,16 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import projekt.yahtzee.util.GameConstants;
+import projekt.yahtzee.util.UIFonts;
 import projekt.yahtzee.controller.ui.SoundController;
 import projekt.yahtzee.controller.ui.ThemeController;
 import projekt.yahtzee.ui.handlers.UIHelper;
 
 /**
  * Builds the confirmation dialog shown when the player tries to exit the game.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class ExitDialog {
     
@@ -41,7 +45,7 @@ public class ExitDialog {
         exitRoot.setStyle(themeController.getBackgroundStyle());
         exitRoot.setPadding(new Insets(30));
         
-        Font messageFont = GameConstants.getCheckboxLabelFont();
+        Font messageFont = UIFonts.getCheckboxLabelFont();
         double messageBoxPadding = 64;
         double containerPadding = 80;
         double containerMinWidth = 360;
@@ -50,8 +54,8 @@ public class ExitDialog {
         String message = "Kas soovid mängust väljuda ja peamenüüsse naasta?";
         double messageWidth = measureTextWidth(message, messageFont);
         double desiredInnerWidth = Math.max(320, messageWidth + messageBoxPadding);
-        double preferredWidth = Math.max(containerMinWidth,
-            Math.min(containerMaxWidth, desiredInnerWidth + containerPadding));
+        double preferredWidth = Math.clamp(desiredInnerWidth + containerPadding,
+            containerMinWidth, containerMaxWidth);
         double contentAreaWidth = preferredWidth - containerPadding;
         double messageMaxWidth = Math.max(0, contentAreaWidth - messageBoxPadding);
 

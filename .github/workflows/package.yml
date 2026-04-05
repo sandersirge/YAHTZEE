@@ -1,0 +1,45 @@
+name: Package (jlink)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  jlink:
+    name: jlink Distribution
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: gradle
+
+      - name: Install JavaFX native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libgtk-3-0 libxtst6
+
+      - run: chmod +x gradlew
+
+      - name: Build jlink image
+        run: ./gradlew jlink --no-daemon
+
+      - name: Upload jlink ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: yahtzee-jlink-linux
+          path: build/distributions/app-linux.zip
+          retention-days: 30
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: yahtzee-jar
+          path: build/libs/YAHTZEE-*.jar
+          retention-days: 30
+

@@ -13,6 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Utility to load classpath resources with fallbacks and to materialize them as temp files when needed.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public final class ResourceLoader {
     private static final Map<String, Path> TEMP_FILE_CACHE = new ConcurrentHashMap<>();

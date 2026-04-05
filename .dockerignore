@@ -1,0 +1,12 @@
+.gradle/
+build/
+bin/
+.idea/
+*.iml
+out/
+settings.txt
+tulemused.txt
+statistics.txt
+*.md
+*.ps1
+

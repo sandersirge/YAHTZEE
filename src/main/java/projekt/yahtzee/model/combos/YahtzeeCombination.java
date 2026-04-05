@@ -10,17 +10,15 @@ import java.util.Set;
  * Always scores 50 points when valid.
  * Note: Named YahtzeeCombination to avoid conflict with game name.
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class YahtzeeCombination extends Combination {
     /**
      * Constructs a Yahtzee combination.
-     * 
-     * @param index the position of this combination in the score sheet
      */
-    public YahtzeeCombination(int index) {
-        super("Yahtzee", index);
+    public YahtzeeCombination() {
+        super("Yahtzee");
     }
     
     /**

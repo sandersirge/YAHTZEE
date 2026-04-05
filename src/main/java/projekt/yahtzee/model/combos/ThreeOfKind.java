@@ -9,17 +9,15 @@ import java.util.HashMap;
  * Requires at least three dice showing the same value.
  * Scores the sum of all five dice.
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class ThreeOfKind extends Combination {
     /**
      * Constructs a Three of a Kind combination.
-     * 
-     * @param index the position of this combination in the score sheet
      */
-    public ThreeOfKind(int index) {
-        super("Three of a Kind", index);
+    public ThreeOfKind() {
+        super("Three of a Kind");
     }
     
     /**
@@ -32,11 +30,7 @@ public class ThreeOfKind extends Combination {
     @Override
     public int calculatePoints(List<Integer> values) {
         if (!isPossible(values)) return 0;
-        int sum = 0;
-        for (Integer v : values) {
-            sum += v;
-        }
-        return sum;
+        return sumAll(values);
     }
     
     /**

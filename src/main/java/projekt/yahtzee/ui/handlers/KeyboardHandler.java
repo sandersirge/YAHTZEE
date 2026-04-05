@@ -22,6 +22,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Handles global keyboard interactions while the game board scene is active.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class KeyboardHandler {
     private static final int[] INTERACTIVE_SCORE_ROWS = {1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15};
@@ -44,9 +47,6 @@ public class KeyboardHandler {
         "ESC - open the exit dialog"
     );
 
-    public static List<String> getHelpShortcutLines() {
-        return HELP_SHORTCUT_LINES;
-    }
 
     private static final Map<KeyCode, Integer> SCORE_SHORTCUTS = Map.ofEntries(
         Map.entry(KeyCode.DIGIT1, 1),
@@ -87,7 +87,6 @@ public class KeyboardHandler {
      * @param exitButton button opening the exit dialog
      * @param dicePanel dice panel instance
      * @param scoreboardController scoreboard controller for focus highlights
-     * @param statusLabel status label for contextual messages
      * @param playerColumns scoreboard columns per player
      * @param playerTurnCounter active player index tracker
      * @param usedCellsByPlayer list tracking picked combinations
@@ -102,7 +101,6 @@ public class KeyboardHandler {
             Button exitButton,
             DicePanel dicePanel,
             ScoreboardController scoreboardController,
-            Label statusLabel,
             List<List<Label>> playerColumns,
             AtomicInteger playerTurnCounter,
             List<List<Integer>> usedCellsByPlayer,
@@ -192,6 +190,13 @@ public class KeyboardHandler {
         });
     }
 
+    /**
+     * Toggles the help dialog visibility: shows it if hidden, closes it if visible.
+     *
+     * @param ownerStage      parent stage for modality
+     * @param themeController  theme controller supplying styles
+     * @param soundController  sound controller for button feedback
+     */
     public static void toggleHelpDialog(Stage ownerStage,
                                         ThemeController themeController,
                                         SoundController soundController) {
@@ -207,6 +212,14 @@ public class KeyboardHandler {
         newHelp.setOnHidden(e -> HELP_DIALOG_STAGE.compareAndSet(newHelp, null));
     }
 
+    /**
+     * Toggles the exit confirmation dialog: shows it if hidden, closes it if visible.
+     *
+     * @param ownerStage      parent stage for modality
+     * @param themeController  theme controller supplying styles
+     * @param soundController  sound controller for button feedback
+     * @param onExit           callback executed when the user confirms exiting
+     */
     public static void toggleExitDialog(Stage ownerStage,
                                         ThemeController themeController,
                                         SoundController soundController,
@@ -302,7 +315,7 @@ public class KeyboardHandler {
                                          Button rollButton,
                                          AtomicBoolean scoreboardFocusActive) {
         switch (code) {
-            case SPACE:
+            case SPACE -> {
                 if (event.isShiftDown() && !dicePanel.areCheckboxesDisabled()) {
                     toggleCurrentDie(dicePanel);
                     event.consume();
@@ -312,35 +325,31 @@ public class KeyboardHandler {
                     event.consume();
                     return true;
                 }
-                return false;
-
-            case ENTER:
+            }
+            case ENTER -> {
                 if (!scoreboardFocusActive.get() && !dicePanel.areCheckboxesDisabled()) {
                     toggleCurrentDie(dicePanel);
                     event.consume();
                     return true;
                 }
-                return false;
-
-            case LEFT:
+            }
+            case LEFT -> {
                 if (!scoreboardFocusActive.get()) {
                     moveDiceFocus(dicePanel, -1);
                     event.consume();
                     return true;
                 }
-                return false;
-
-            case RIGHT:
+            }
+            case RIGHT -> {
                 if (!scoreboardFocusActive.get()) {
                     moveDiceFocus(dicePanel, 1);
                     event.consume();
                     return true;
                 }
-                return false;
-
-            default:
-                return false;
+            }
+            default -> { }
         }
+        return false;
     }
 
     private static void processScoreShortcut(int uiIndex,

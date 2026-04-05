@@ -22,6 +22,7 @@ import projekt.yahtzee.controller.ui.ThemeController;
 import projekt.yahtzee.ui.handlers.KeyboardHandler;
 import projekt.yahtzee.ui.handlers.UIHelper;
 import projekt.yahtzee.util.GameConstants;
+import projekt.yahtzee.util.UIFonts;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Encapsulates the construction of the left-hand dice controls section on the game board.
+ *
+ * @author sandersirge
+ * @version 1.1.0
  */
 public final class GameControlsPanel {
     private final VBox container;
@@ -53,6 +57,21 @@ public final class GameControlsPanel {
         this.statusLabel = statusLabel;
     }
 
+    /**
+     * Factory method that builds the complete dice controls panel.
+     *
+     * @param gameController         controller managing game logic
+     * @param themeController        controller providing theme styles
+     * @param soundController        controller playing sound effects
+     * @param scoreboardController   controller rendering scoreboard updates
+     * @param playerColumns          scoreboard columns per player
+     * @param playerUsedCombinations tracking list for used combinations
+     * @param diceValues             current dice values list
+     * @param playerTurnCounter      atomic index tracking the active player
+     * @param primaryStage           primary stage reference
+     * @param onGameEnd              callback fired when the game ends
+     * @return a fully configured {@code GameControlsPanel}
+     */
     public static GameControlsPanel create(GameController gameController,
                                              ThemeController themeController,
                                              SoundController soundController,
@@ -100,7 +119,7 @@ public final class GameControlsPanel {
         titleCard.setPadding(new Insets(12, 16, 12, 16));
         titleCard.setStyle("-fx-background-color: " + themeController.getTitleBoxBackground() + "; -fx-background-radius: 12; -fx-border-radius: 12;");
 
-        DicePanel dicePanel = new DicePanel(themeController, gameController.getDice());
+        DicePanel dicePanel = new DicePanel(themeController);
         VBox diceBoxContainer = dicePanel.createDicePanel();
         dicePanel.setCheckboxesDisabled(true);
 
@@ -112,7 +131,7 @@ public final class GameControlsPanel {
 
         String initialMessage = GameConstants.FIRST_PLAYER_TURN + "\n\nVeereta täringuid alustamiseks!";
         if (!gameController.getPlayers().isEmpty()) {
-            String firstPlayerName = gameController.getPlayers().get(0).getPlayerName();
+            String firstPlayerName = gameController.getPlayers().getFirst().getPlayerName();
             initialMessage = "1. mängija - " + firstPlayerName + " kord!\n\nVeereta täringuid alustamiseks!";
         }
         Label statusLabel = new Label(initialMessage);
@@ -147,7 +166,7 @@ public final class GameControlsPanel {
         helpButton.setOnAction(e -> KeyboardHandler.toggleHelpDialog(primaryStage, themeController, soundController));
 
         Label helpLabel = new Label("Vajuta 'h' juhiste kuvamiseks");
-        helpLabel.setFont(GameConstants.getCellFontBold());
+        helpLabel.setFont(UIFonts.getCellFontBold());
         helpLabel.setStyle(themeController.getLabelTextFill());
 
         HBox helpRow = new HBox();
@@ -193,7 +212,7 @@ public final class GameControlsPanel {
         rollButton.setOnAction(actionEvent -> {
             int rollCount = gameController.getCurrentRollCount();
 
-            if (rollCount >= GameConstants.MAX_ROLLS) {
+            if (rollCount >= GameConstants.MAX_ROLLS_PER_TURN) {
                 statusLabel.setText(GameConstants.MSG_NO_MORE_ROLLS);
                 return;
             }
@@ -231,7 +250,7 @@ public final class GameControlsPanel {
                         playerUsedCombinations.get(currentPlayerIndex));
                 }
 
-                boolean mustPickScore = updatedRollCount >= GameConstants.MAX_ROLLS;
+                boolean mustPickScore = updatedRollCount >= GameConstants.MAX_ROLLS_PER_TURN;
                 if (mustPickScore) {
                     statusLabel.setText("Sa ei saa rohkem veeretada\nVali tabelist sobivad punktid!");
                     dicePanel.setCheckboxesDisabled(true);
@@ -283,26 +302,56 @@ public final class GameControlsPanel {
         return exitButton;
     }
 
+    /**
+     * Gets the root container of the controls panel.
+     *
+     * @return the VBox container
+     */
     public VBox getContainer() {
         return container;
     }
 
+    /**
+     * Gets the dice panel component.
+     *
+     * @return the dice panel
+     */
     public DicePanel getDicePanel() {
         return dicePanel;
     }
 
+    /**
+     * Gets the roll button.
+     *
+     * @return the roll button
+     */
     public Button getRollButton() {
         return rollButton;
     }
 
+    /**
+     * Gets the exit button.
+     *
+     * @return the exit button
+     */
     public Button getExitButton() {
         return exitButton;
     }
 
+    /**
+     * Gets the label displaying the roll counter.
+     *
+     * @return the roll counter label
+     */
     public Label getRollCounterLabel() {
         return rollCounterLabel;
     }
 
+    /**
+     * Gets the label displaying game status messages.
+     *
+     * @return the status label
+     */
     public Label getStatusLabel() {
         return statusLabel;
     }

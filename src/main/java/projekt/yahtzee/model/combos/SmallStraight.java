@@ -9,17 +9,15 @@ import java.util.Set;
  * Requires at least 4 consecutive dice values.
  * Always scores 30 points when valid.
  * 
- * @author Sander Sirge
- * @version 1.0
+ * @author sandersirge
+ * @version 1.1.0
  */
 public class SmallStraight extends Combination {
     /**
      * Constructs a Small Straight combination.
-     * 
-     * @param index the position of this combination in the score sheet
      */
-    public SmallStraight(int index) {
-        super("Small Straight", index);
+    public SmallStraight() {
+        super("Small Straight");
     }
     
     /**

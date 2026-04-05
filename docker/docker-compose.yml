@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+  # ── Game with VNC GUI access ───────────────────────────────────────────────
+  yahtzee:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: runtime
+    image: yahtzee:dev
+    container_name: yahtzee_dev
+    ports:
+      - "5900:5900"    # VNC direct connect (use a VNC client)
+      - "6080:6080"    # noVNC browser: http://localhost:6080/vnc.html
+    volumes:
+      - yahtzee_data:/data
+    environment:
+      - DISPLAY=:1
+      - YAHTZEE_DATA_DIR=/data
+      - VNC_PASSWORD=yahtzee
+    restart: unless-stopped
+
+  # ── Build-only service (use: docker compose --profile build up yahtzee-build) ─
+  yahtzee-build:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: builder
+    image: yahtzee:builder
+    profiles: ["build"]
+    volumes:
+      - gradle_cache:/root/.gradle
+
+  # ── CI test runner (use: docker compose --profile ci run yahtzee-ci) ───────
+  yahtzee-ci:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: ci
+    image: yahtzee:ci
+    profiles: ["ci"]
+    volumes:
+      - gradle_cache:/root/.gradle
+
+volumes:
+  yahtzee_data:
+    driver: local
+  gradle_cache:
+    driver: local
+
