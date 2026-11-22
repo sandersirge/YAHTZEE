@@ -99,3 +99,18 @@ tasks.register('jlink', Exec) {
     }
 }
 
+
+// Zips the runtime image as build/distributions/app-<platform>.zip (app-win, app-linux,
+// app-mac-aarch64, ...) for the Package and Release workflows. Unzip and start
+// yahtzee/bin/app (app.bat on Windows); no separate JDK is needed.
+tasks.register('jlinkZip', Zip) {
+    description = 'Zips the jlink runtime image for distribution'
+    group = 'distribution'
+    dependsOn 'jlink'
+
+    from(layout.buildDirectory.dir('jlink-image')) {
+        into 'yahtzee'
+    }
+    archiveFileName = "app-${javafxClassifier}.zip"
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+}

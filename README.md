@@ -60,6 +60,8 @@ cd YAHTZEE
 build/jlink-image/bin/app      # Windows: build\jlink-image\bin\app.bat
 ```
 
+`./gradlew jlinkZip` also packs the image as `build/distributions/app-<platform>.zip`. The Package workflow builds one for Windows, macOS and Linux on every push to `main`, and pushing a `v*.*.*` tag publishes them as a GitHub release: unzip and start `yahtzee/bin/app` (`app.bat` on Windows).
+
 ### Extra rules
 
 On the setup screen, **Lisareeglid** (on by default) turns on two official rules:
