@@ -1,15 +1,13 @@
 package projekt.yahtzee;
 
 import javafx.application.Application;
-import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import projekt.yahtzee.controller.data.StatisticsController;
 import projekt.yahtzee.controller.game.GameController;
+import projekt.yahtzee.controller.game.GameSetup;
 import projekt.yahtzee.controller.ui.SoundController;
 import projekt.yahtzee.controller.ui.ThemeController;
 import projekt.yahtzee.ui.navigation.SceneManager;
-
-import java.util.List;
 
 /**
  * Main entry point for the Yahtzee JavaFX application.
@@ -55,10 +53,11 @@ public class YahtzeeApplication extends Application {
         sceneManager.showSetupScene(this::startNewGame, this::showMainMenu);
     }
 
-    private void startNewGame(List<TextField> playerFields) {
+    private void startNewGame(GameSetup setup) {
         soundController.switchMusic(false);
         gameController = new GameController();
-        sceneManager.showGameBoard(gameController, playerFields, this::returnToMainMenu);
+        gameController.setExtraRules(setup.extraRules());
+        sceneManager.showGameBoard(gameController, setup, this::returnToMainMenu);
     }
 
     private void returnToMainMenu() {

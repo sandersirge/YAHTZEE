@@ -1,0 +1,4 @@
+# Shell scripts must keep LF so the wrapper runs on macOS/Linux CI
+gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary

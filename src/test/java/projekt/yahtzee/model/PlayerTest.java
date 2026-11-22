@@ -180,5 +180,23 @@ class PlayerTest {
         assertTrue(result.contains("TestPlayer"));
         assertTrue(result.contains("42"));
     }
-}
 
+    @Test
+    void usedCombosAreCopiesSoCallersCannotChangeState() {
+        int[] copy = player.getUsedCombos();
+        copy[0] = 1;
+        assertFalse(player.isComboUsed(0));
+        int[] input = new int[13];
+        player.setUsedCombos(input);
+        input[3] = 1;
+        assertFalse(player.isComboUsed(3));
+    }
+
+    @Test
+    void markComboUsedStoresPoints() {
+        player.markComboUsed(11, 50);
+        assertTrue(player.isComboUsed(11));
+        assertEquals(50, player.getComboScore(11));
+        assertEquals(0, player.getComboScore(10));
+    }
+}

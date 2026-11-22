@@ -51,6 +51,7 @@ public class DicePanel {
     private final Image[] diceImageCache;
     private final Image checkmarkImage;
     private int focusedDieIndex = -1;
+    private boolean rolling;
     
     /**
      * Constructs a new dice panel.
@@ -209,6 +210,7 @@ public class DicePanel {
      * @param onFinished callback to run after animation completes
      */
     public void animateDiceRoll(int[] kept, List<Integer> values, Runnable onFinished) {
+        rolling = true;
         Timeline imageAnimation = new Timeline();
         
         // Create 20 frames, every 50ms (total 1000ms) for image updating
@@ -269,6 +271,7 @@ public class DicePanel {
         
         // Call callback after animation completes
         imageAnimation.setOnFinished(event -> {
+            rolling = false;
             if (onFinished != null) {
                 onFinished.run();
             }
@@ -277,6 +280,16 @@ public class DicePanel {
         imageAnimation.play();
     }
     
+    /**
+     * Tells whether the roll animation is still running. Scoring waits until it ends,
+     * so the turn cannot change underneath the animation's completion callback.
+     *
+     * @return true while dice are animating
+     */
+    public boolean isRolling() {
+        return rolling;
+    }
+
     /**
      * Gets the keep status as an array.
      * 

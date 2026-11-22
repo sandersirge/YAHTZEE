@@ -5,9 +5,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
+import projekt.yahtzee.controller.game.GameSetup;
 import projekt.yahtzee.controller.ui.SoundController;
 import projekt.yahtzee.controller.ui.ThemeController;
 import projekt.yahtzee.ui.handlers.UIHelper;
@@ -16,6 +18,7 @@ import projekt.yahtzee.util.UIFonts;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -46,7 +49,7 @@ public class GameSetupScene {
      * @param onBackToMenu callback invoked when the user wants to return to the main menu
      * @return configured setup scene
      */
-    public Scene createSetupScene(Consumer<List<TextField>> onStartGame, Runnable onBackToMenu) {
+    public Scene createSetupScene(Consumer<GameSetup> onStartGame, Runnable onBackToMenu) {
         StackPane setupRoot = new StackPane();
         setupRoot.setStyle(themeController.getBackgroundStyle());
 
@@ -170,12 +173,32 @@ public class GameSetupScene {
                 }
             }));
 
-        // Configure start-button action.
-        startButton.setOnAction(e -> onStartGame.accept(playerNameFields));
+        // Extra rules: Yahtzee bonus and Joker rule.
+        CheckBox extraRulesBox = new CheckBox(GameConstants.LABEL_EXTRA_RULES);
+        extraRulesBox.setFont(UIFonts.getMediumFont());
+        extraRulesBox.setStyle(themeController.getLabelTextFill());
+        extraRulesBox.setSelected(true);
+
+        // Configure start-button action: clean up names and refuse duplicates.
+        startButton.setOnAction(e -> {
+            List<String> typed = new ArrayList<>();
+            for (TextField field : playerNameFields) {
+                typed.add(field.getText());
+            }
+            List<String> names = GameSetup.resolveNames(typed);
+            Optional<String> duplicate = GameSetup.findDuplicate(names);
+            if (duplicate.isPresent()) {
+                warningLabel.setText(GameConstants.ERROR_DUPLICATE_NAME + duplicate.get());
+                warningContainer.setVisible(true);
+                warningContainer.setManaged(true);
+                return;
+            }
+            onStartGame.accept(new GameSetup(names, extraRulesBox.isSelected()));
+        });
 
         buttonRow.getChildren().add(backButton);
 
-        contentContainer.getChildren().addAll(titleContainer, warningContainer, playerCountBox, playersBox, buttonRow);
+        contentContainer.getChildren().addAll(titleContainer, warningContainer, playerCountBox, playersBox, extraRulesBox, buttonRow);
         setupRoot.getChildren().add(contentContainer);
         StackPane.setAlignment(contentContainer, Pos.CENTER);
 

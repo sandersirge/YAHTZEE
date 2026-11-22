@@ -146,11 +146,10 @@ public class KeyboardHandler {
 
             switch (code) {
                 case ESCAPE:
-                    toggleExitDialog(ownerStage, themeController, soundController, () -> {
-                        if (exitButton != null) {
-                            exitButton.fire();
-                        }
-                    });
+                    // The exit button toggles the confirmation dialog; a "yes" there ends the game.
+                    if (exitButton != null) {
+                        exitButton.fire();
+                    }
                     event.consume();
                     break;
 

@@ -13,6 +13,7 @@ Key highlights:
 - Soundscape with hover, click, dice roll, and victory effects
 - Theme controller for live style changes
 - Statistics controller for result tracking
+- Optional official extra rules: Yahtzee bonus (+100 per extra Yahtzee) and the Joker rule
 - Gradle-managed build with Java modules
 
 ## Old Version Specs (CLI Release)
@@ -29,15 +30,15 @@ Key highlights:
 - **Interface**: Full JavaFX GUI with animations and themed styling
 - **Players**: 1-3 with automatic score calculations
 - **Architecture**: Modular packages (`controller`, `model`, `ui`, `util`), 86-line entry point
-- **Technology**: Java 17+, JavaFX 21, Gradle 8.5, Java modules
-- **Features**: Theme switching, sound controller, statistics persistence, keyboard shortcuts, animated dice, score hints
+- **Technology**: Java 21+, JavaFX 21 (LTS), Gradle 9.9 wrapper (also runs on the newest JDKs), Java modules
+- **Features**: Theme switching, sound controller, statistics persistence, keyboard shortcuts, animated dice, score hints, optional Yahtzee bonus and Joker rule
 - **Code Quality**: camelCase fields, centralized imports, single-responsibility classes, reusable components
 
 ## Setup & Run Instructions
 
 ### Prerequisites
 
-- Java Development Kit 17 or newer (JavaFX 21 compatible)
+- Java Development Kit 21 or newer
 - Git (optional, for cloning)
 - No separate Gradle install required (wrapper included)
 
@@ -46,7 +47,7 @@ Key highlights:
 ```bash
 # 1. Clone the repository
 git clone <repository-url>
-cd CLI_YAHTZEE/YAHTZEE
+cd YAHTZEE
 
 # 2. Build the project
 ./gradlew build      # Windows: .\gradlew build
@@ -54,10 +55,29 @@ cd CLI_YAHTZEE/YAHTZEE
 # 3. Run the application
 ./gradlew run        # Windows: .\gradlew run
 
-# Optional: create a runnable JAR
-./gradlew jar        # Windows: .\gradlew jar
-java -jar build/libs/YAHTZEE.jar
+# Optional: build a self-contained runtime image (no separate JDK needed to play)
+./gradlew jlink      # Windows: .\gradlew jlink
+build/jlink-image/bin/app      # Windows: build\jlink-image\bin\app.bat
 ```
+
+### Extra rules
+
+On the setup screen, **Lisareeglid** (on by default) turns on two official rules:
+
+- **Yahtzee bonus**: every further Yahtzee scores +100 while the Yahtzee box holds 50. The bonus counts towards the lower section.
+- **Joker rule**: once the Yahtzee box is filled (with 50 or 0), a further Yahtzee must go into its matching upper box if that is open. Otherwise it goes into any open lower box at full value (Full House 25, Small Straight 30, Large Straight 40). Only when the lower section is full does it scratch an upper box for 0. The status line says where it may go.
+
+### Where the game keeps its files
+
+Settings (`settings.txt`), the results log (`tulemused.txt`) and statistics (`statistics.txt`) are stored per user:
+
+| Platform | Folder |
+|----------|--------|
+| Windows  | `%APPDATA%\Yahtzee` |
+| macOS    | `~/Library/Application Support/Yahtzee` |
+| Linux    | `$XDG_DATA_HOME/yahtzee` or `~/.local/share/yahtzee` |
+
+Set `-Dyahtzee.data.dir=...` or the `YAHTZEE_DATA_DIR` environment variable to use another folder (the Docker image uses `/data`). Files from older versions, which were written to the folder the game was started from, are copied over on first start.
 
 ## Possible Future Enhancements
 

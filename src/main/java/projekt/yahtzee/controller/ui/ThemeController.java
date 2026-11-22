@@ -1,5 +1,6 @@
 package projekt.yahtzee.controller.ui;
 
+import projekt.yahtzee.util.DataPaths;
 import projekt.yahtzee.util.GameConstants;
 
 import java.io.BufferedReader;
@@ -7,7 +8,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Manages the application theme (light or dark) and persists the selection in settings.txt.
@@ -41,7 +41,7 @@ public class ThemeController {
      * @return path to the settings file
      */
     private Path resolveSettingsPath() {
-        return Paths.get(GameConstants.SETTINGS_FILE);
+        return DataPaths.settingsFile();
     }
     
     /**

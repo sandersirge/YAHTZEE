@@ -313,11 +313,15 @@ public class ScoreboardController {
         
         // Update UI labels with potential scores.
         for (int i = 0; i < scores.length; i++) {
+            int uiIndex = (i < 6) ? i + 1 : i + 3;
+            if (uiIndex >= playerColumn.size()) {
+                continue;
+            }
             if (scores[i] != null) {
-                int uiIndex = (i < 6) ? i + 1 : i + 3;
-                if (uiIndex < playerColumn.size()) {
-                    playerColumn.get(uiIndex).setText(scores[i]);
-                }
+                playerColumn.get(uiIndex).setText(scores[i]);
+            } else if (usedCombos[i] == 0) {
+                // Open but not allowed this turn (Joker rule): clear any earlier preview.
+                playerColumn.get(uiIndex).setText(GameConstants.SCORE_PLACEHOLDER);
             }
         }
     }

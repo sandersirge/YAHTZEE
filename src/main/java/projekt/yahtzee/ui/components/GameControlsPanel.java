@@ -125,7 +125,7 @@ public final class GameControlsPanel {
 
         upperSection.getChildren().addAll(titleCard, diceBoxContainer);
 
-        Label rollCounterLabel = new Label("Veeretusi tehtud: 0/3");
+        Label rollCounterLabel = new Label(GameConstants.rollCounterText(0));
         rollCounterLabel.setFont(Font.font(GameConstants.FONT_FAMILY, FontWeight.BOLD, 36));
         rollCounterLabel.setTextFill(Color.web(themeController.getRollCounterColor()));
 
@@ -210,6 +210,9 @@ public final class GameControlsPanel {
         UIHelper.attachButtonAnimations(rollButton, soundController);
 
         rollButton.setOnAction(actionEvent -> {
+            if (gameController.isGameFinished()) {
+                return;
+            }
             int rollCount = gameController.getCurrentRollCount();
 
             if (rollCount >= GameConstants.MAX_ROLLS_PER_TURN) {
@@ -241,7 +244,7 @@ public final class GameControlsPanel {
                 dicePanel.syncKeepSelections(keptValueCounts, updatedValues);
                 dicePanel.setCheckboxesDisabled(false);
                 int updatedRollCount = gameController.getCurrentRollCount();
-                rollCounterLabel.setText("Veeretusi tehtud: " + updatedRollCount + "/3");
+                rollCounterLabel.setText(GameConstants.rollCounterText(updatedRollCount));
 
                 int currentPlayerIndex = playerTurnCounter.get();
                 if (currentPlayerIndex >= 0 && currentPlayerIndex < playerColumns.size()) {
@@ -251,8 +254,10 @@ public final class GameControlsPanel {
                 }
 
                 boolean mustPickScore = updatedRollCount >= GameConstants.MAX_ROLLS_PER_TURN;
+                String jokerHint = gameController.jokerHint(diceValues);
+                String jokerPrefix = jokerHint.isEmpty() ? "" : jokerHint + "\n";
                 if (mustPickScore) {
-                    statusLabel.setText("Sa ei saa rohkem veeretada\nVali tabelist sobivad punktid!");
+                    statusLabel.setText(jokerPrefix + "Sa ei saa rohkem veeretada\nVali tabelist sobivad punktid!");
                     dicePanel.setCheckboxesDisabled(true);
                     dicePanel.setFocusedDieIndex(-1);
 
@@ -271,7 +276,7 @@ public final class GameControlsPanel {
                         }
                     }
                 } else {
-                    statusLabel.setText("Vali alleshoitavad täringud\nvõi pane endale punktid tabelisse");
+                    statusLabel.setText(jokerPrefix + "Vali alleshoitavad täringud\nvõi pane endale punktid tabelisse");
                     scoreboardController.clearKeyboardFocus();
                     dicePanel.setCheckboxesDisabled(false);
                     dicePanel.setFocusedDieIndex(0);

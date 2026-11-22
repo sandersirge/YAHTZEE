@@ -5,13 +5,14 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import projekt.yahtzee.controller.game.GameController;
+import projekt.yahtzee.controller.game.GameSetup;
 import projekt.yahtzee.controller.ui.ScoreboardController;
 import projekt.yahtzee.controller.ui.SoundController;
 import projekt.yahtzee.controller.ui.ThemeController;
@@ -58,11 +59,11 @@ public class GameBoardScene {
      * Builds the game scene with the dice panel, scoreboard, and related interactions.
      *
     * @param primaryStage primary stage that hosts the scene
-    * @param nameFields list of player name input fields
+    * @param setup player names and rule choice from the setup screen
      * @param onGameEnd callback invoked when the user exits the game
      * @return constructed game board scene
      */
-    public Scene createGameBoardScene(Stage primaryStage, List<TextField> nameFields, Runnable onGameEnd) {
+    public Scene createGameBoardScene(Stage primaryStage, GameSetup setup, Runnable onGameEnd) {
         // Play a random game-start sound.
         playGameStartSound();
         
@@ -76,7 +77,7 @@ public class GameBoardScene {
         HBox layoutContent = (HBox) boardRoot.getChildren().getFirst();
 
         // Create scoreboard first to obtain controller instance.
-        List<String> playerNames = initializePlayers(nameFields);
+        List<String> playerNames = initializePlayers(setup.playerNames());
         final ScoreboardController scoreboardController = new ScoreboardController(themeController, playerNames);
         HBox scoreboardUI = scoreboardController.createScoreboard();
         final List<List<Label>> playerColumns = new ArrayList<>(scoreboardController.getPlayerColumns());
@@ -115,6 +116,7 @@ public class GameBoardScene {
             gameController,
             scoreboardController,
             diceSection.getDicePanel(),
+            diceSection.getRollButton(),
             diceSection.getRollCounterLabel(),
             diceSection.getStatusLabel(),
             primaryStage,
@@ -191,18 +193,11 @@ public class GameBoardScene {
     /**
      * Initializes players inside the game controller and returns their names.
      */
-    private List<String> initializePlayers(List<TextField> nameFields) {
-        List<String> playerNames = new ArrayList<>();
-        for (int i = 0; i < nameFields.size(); i++) {
-            TextField field = nameFields.get(i);
-            String name = field.getText();
-            if (name.isEmpty()) {
-                name = GameConstants.getDefaultPlayerName(i + 1);
-            }
-            playerNames.add(name);
+    private List<String> initializePlayers(List<String> names) {
+        for (String name : names) {
             gameController.addPlayer(name);
         }
-        return playerNames;
+        return new ArrayList<>(names);
     }
     
     /**

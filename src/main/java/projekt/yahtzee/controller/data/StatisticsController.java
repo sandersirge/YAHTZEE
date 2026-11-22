@@ -1,7 +1,7 @@
 package projekt.yahtzee.controller.data;
 
 import projekt.yahtzee.model.Player;
-import projekt.yahtzee.util.GameConstants;
+import projekt.yahtzee.util.DataPaths;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +28,7 @@ public class StatisticsController {
     private double averageScore;
     private int totalScore;
     private int totalPlayerEntries;
+    private final Path statsPath;
     private final Map<String, Integer> playerWins;
     private final Map<String, Integer> playerGamesPlayed;
     private final Map<String, Integer> playerHighScores;
@@ -37,6 +37,16 @@ public class StatisticsController {
      * Constructs a new statistics controller and loads any persisted statistics from disk.
      */
     public StatisticsController() {
+        this(DataPaths.statisticsFile());
+    }
+
+    /**
+     * Creates a statistics controller backed by the given file.
+     *
+     * @param statsPath statistics file to read and write
+     */
+    public StatisticsController(Path statsPath) {
+        this.statsPath = statsPath;
         this.totalGames = 0;
         this.highestScore = 0;
         this.highestScorePlayer = "";
@@ -54,7 +64,6 @@ public class StatisticsController {
      * Loads persisted statistics from disk.
      */
     private void loadStatistics() {
-        Path statsPath = Paths.get(GameConstants.STATISTICS_FILE);
         if (Files.notExists(statsPath)) {
             return;
         }
@@ -62,31 +71,7 @@ public class StatisticsController {
         try (BufferedReader reader = Files.newBufferedReader(statsPath, StandardCharsets.UTF_8)) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String trimmed = line.trim();
-                if (trimmed.isEmpty()) {
-                    continue;
-                }
-
-                if (trimmed.startsWith("TOTAL_GAMES=")) {
-                    totalGames = parseIntSafe(trimmed.substring(12), totalGames);
-                } else if (trimmed.startsWith("HIGHEST_SCORE=")) {
-                    highestScore = parseIntSafe(trimmed.substring(14), highestScore);
-                } else if (trimmed.startsWith("HIGHEST_SCORE_PLAYER=")) {
-                    highestScorePlayer = trimmed.substring(21);
-                } else if (trimmed.startsWith("TOTAL_SCORE=")) {
-                    totalScore = parseIntSafe(trimmed.substring(12), totalScore);
-                } else if (trimmed.startsWith("TOTAL_PLAYER_ENTRIES=")) {
-                    totalPlayerEntries = parseIntSafe(trimmed.substring(22), totalPlayerEntries);
-                } else if (trimmed.startsWith("PLAYER_WIN=")) {
-                    String[] parts = trimmed.substring(11).split(":");
-                    playerWins.put(parts[0], Integer.parseInt(parts[1]));
-                } else if (trimmed.startsWith("PLAYER_GAMES=")) {
-                    String[] parts = trimmed.substring(13).split(":");
-                    playerGamesPlayed.put(parts[0], Integer.parseInt(parts[1]));
-                } else if (trimmed.startsWith("PLAYER_HIGH=")) {
-                    String[] parts = trimmed.substring(12).split(":");
-                    playerHighScores.put(parts[0], Integer.parseInt(parts[1]));
-                }
+                readLine(line.trim());
             }
             if (totalPlayerEntries == 0) {
                 totalPlayerEntries = playerGamesPlayed.values().stream().mapToInt(Integer::intValue).sum();
@@ -94,7 +79,7 @@ public class StatisticsController {
             if (totalPlayerEntries > 0) {
                 averageScore = (double) totalScore / totalPlayerEntries;
             }
-        } catch (IOException | NumberFormatException e) {
+        } catch (IOException e) {
             System.err.println("Failed to load statistics: " + e.getMessage());
         }
     }
@@ -103,7 +88,6 @@ public class StatisticsController {
      * Saves the current statistics to disk.
      */
     private void saveStatistics() {
-        Path statsPath = Paths.get(GameConstants.STATISTICS_FILE);
         try {
             Path parent = statsPath.getParent();
             if (parent != null) {
@@ -188,9 +172,46 @@ public class StatisticsController {
      * @param fallback value returned when parsing fails
      * @return parsed integer or the fallback value
      */
+    /**
+     * Reads one {@code KEY=value} line. Player lines hold {@code name:number}; the number is
+     * after the last colon, so names may contain colons. A malformed line is skipped on its
+     * own instead of stopping the load, which would otherwise lose the rest of the file on
+     * the next save.
+     */
+    private void readLine(String line) {
+        int eq = line.indexOf('=');
+        if (eq <= 0) {
+            return;
+        }
+        String key = line.substring(0, eq);
+        String value = line.substring(eq + 1);
+        switch (key) {
+            case "TOTAL_GAMES" -> totalGames = parseIntSafe(value, totalGames);
+            case "HIGHEST_SCORE" -> highestScore = parseIntSafe(value, highestScore);
+            case "HIGHEST_SCORE_PLAYER" -> highestScorePlayer = value;
+            case "TOTAL_SCORE" -> totalScore = parseIntSafe(value, totalScore);
+            case "TOTAL_PLAYER_ENTRIES" -> totalPlayerEntries = parseIntSafe(value, totalPlayerEntries);
+            case "PLAYER_WIN" -> readPlayerEntry(value, playerWins);
+            case "PLAYER_GAMES" -> readPlayerEntry(value, playerGamesPlayed);
+            case "PLAYER_HIGH" -> readPlayerEntry(value, playerHighScores);
+            default -> { }
+        }
+    }
+
+    private void readPlayerEntry(String value, Map<String, Integer> target) {
+        int colon = value.lastIndexOf(':');
+        if (colon <= 0) {
+            return;
+        }
+        int number = parseIntSafe(value.substring(colon + 1), -1);
+        if (number >= 0) {
+            target.put(value.substring(0, colon), number);
+        }
+    }
+
     private int parseIntSafe(String value, int fallback) {
         try {
-            return Integer.parseInt(value);
+            return Integer.parseInt(value.trim());
         } catch (NumberFormatException e) {
             return fallback;
         }

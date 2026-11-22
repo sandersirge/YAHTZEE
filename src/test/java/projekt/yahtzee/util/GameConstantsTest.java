@@ -86,5 +86,10 @@ class GameConstantsTest {
         assertNotNull(GameConstants.BUTTON_ERROR_STYLE);
         assertNotNull(GameConstants.BUTTON_INFO_STYLE);
     }
-}
 
+    @Test
+    void rollCounterTextIsTheSameEverywhere() {
+        assertEquals("Veeretusi tehtud: 0/3", GameConstants.rollCounterText(0));
+        assertEquals("Veeretusi tehtud: 3/3", GameConstants.rollCounterText(3));
+    }
+}

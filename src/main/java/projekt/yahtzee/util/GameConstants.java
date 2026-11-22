@@ -103,6 +103,15 @@ public class GameConstants {
     public static final String FIRST_PLAYER_TURN = "1. mängija kord";
     public static final String MSG_PLAYER_TURN = ". mängija kord";
     public static final String MSG_ROLL_NUMBER = ". veeretus\nVali alleshoitavad täringud\nvõi pane endale punktid tabelisse";
+    public static final String ROLL_COUNTER_PREFIX = "Veeretusi tehtud: ";
+    public static final String LABEL_EXTRA_RULES = "Lisareeglid: Yahtzee boonus (+100) ja jokker";
+    public static final String MSG_EXTRA_RULES_ON = "Lisareeglid sees";
+    public static final String MSG_JOKER_UPPER = "JOKKER! Kirjuta see lahtrisse ";
+    public static final String MSG_JOKER_LOWER = "JOKKER! Vali alumisest osast mis tahes lahter";
+    public static final String MSG_JOKER_SCRATCH = "JOKKER! Alumine osa on täis,\nkriipsuta ülemisest mõni lahter";
+    public static final String MSG_JOKER_NOT_ALLOWED = "Jokkerit ei saa siia kirjutada!";
+    public static final String MSG_YAHTZEE_BONUS = "YAHTZEE BOONUS +100!";
+    public static final String ERROR_DUPLICATE_NAME = "Nimi on juba kasutusel: ";
     public static final String MSG_NO_MORE_ROLLS = "Sa ei saa rohkem veeretada\nVali tabelist sobivad punktid!";
     public static final String MSG_CURRENT_RESULTS = "Hetkel kuvatavad tulemused:";
     
@@ -114,6 +123,10 @@ public class GameConstants {
     public static final String COMBO_FOURS = "Neljad";
     public static final String COMBO_FIVES = "Viied";
     public static final String COMBO_SIXES = "Kuued";
+    /** Upper box names in order, index 0 = Ones. */
+    public static final String[] UPPER_BOX_NAMES = {
+        COMBO_ONES, COMBO_TWOS, COMBO_THREES, COMBO_FOURS, COMBO_FIVES, COMBO_SIXES
+    };
     public static final String COMBO_BONUS = "BOONUS";
     public static final String COMBO_UPPER_SUM = "ÜLEMINE SUMMA";
     public static final String COMBO_THREE_KIND = "Kolmik";
@@ -133,6 +146,8 @@ public class GameConstants {
     public static final int TOTAL_COMBINATIONS = 13;
     public static final int UPPER_SECTION_BONUS_THRESHOLD = 63;
     public static final int UPPER_SECTION_BONUS_POINTS = 35;
+    public static final int YAHTZEE_POINTS = 50;
+    public static final int YAHTZEE_BONUS_POINTS = 100;
     
     // ========== FILE PATHS ==========
     public static final String SETTINGS_FILE = "settings.txt";
@@ -208,5 +223,15 @@ public class GameConstants {
      */
     public static String getRollMessage(int rollNumber) {
         return rollNumber + MSG_ROLL_NUMBER;
+    }
+
+    /**
+     * Text of the roll counter, e.g. "Veeretusi tehtud: 2/3".
+     *
+     * @param rolls rolls made this turn
+     * @return counter text
+     */
+    public static String rollCounterText(int rolls) {
+        return ROLL_COUNTER_PREFIX + rolls + "/" + MAX_ROLLS_PER_TURN;
     }
 }

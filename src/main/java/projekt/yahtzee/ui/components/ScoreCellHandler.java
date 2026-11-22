@@ -2,6 +2,7 @@ package projekt.yahtzee.ui.components;
 
 import javafx.animation.PauseTransition;
 import javafx.scene.Cursor;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -72,6 +73,7 @@ public class ScoreCellHandler {
             GameController gameController,
             ScoreboardController scoreboardController,
             DicePanel dicePanel,
+            Button rollButton,
             Label rollCounterLabel,
             Label statusLabel,
             Stage primaryStage,
@@ -113,6 +115,10 @@ public class ScoreCellHandler {
                     if (currentPlayerIdx < 0 || currentPlayerIdx >= playerColumns.size()) {
                         return;
                     }
+                    // Wait for the roll animation; scoring now would hand its result to the next player.
+                    if (dicePanel.isRolling() || gameController.isGameFinished()) {
+                        return;
+                    }
                     List<Label> activePlayerColumn = playerColumns.get(currentPlayerIdx);
                     List<Integer> activePlayerCombos = playerUsedCombinations.get(currentPlayerIdx);
                     
@@ -148,13 +154,21 @@ public class ScoreCellHandler {
                         return;
                     }
                     
+                    // Joker rule: an extra Yahtzee must go where the official rules say.
+                    if (!gameController.isAllowed(comboIndex, diceValues)) {
+                        soundController.playClip(soundController.getViolinScreechSound());
+                        statusLabel.setText(GameConstants.MSG_JOKER_NOT_ALLOWED + "\n" + gameController.jokerHint(diceValues));
+                        return;
+                    }
+
                     Player currentPlayer = gameController.getPlayers().get(currentPlayerIdx);
+                    boolean yahtzeeBonus = gameController.earnsYahtzeeBonus(diceValues);
                     int earnedPoints = gameController.saveScore(comboIndex, diceValues);
                     
                     // Choose an appropriate sound effect based on the score.
                     if (earnedPoints > 0) {
                         boolean isYahtzeeCombo = comboIndex == 11;
-                        if (isYahtzeeCombo && earnedPoints == 50) {
+                        if (yahtzeeBonus || (isYahtzeeCombo && earnedPoints == GameConstants.YAHTZEE_POINTS)) {
                             soundController.playYahtzeeCelebration();
                         } else {
                             soundController.playRandomPositiveScoreSound();
@@ -187,8 +201,10 @@ public class ScoreCellHandler {
                     // Update sums and totals
                     activePlayerColumn.get(8).setText(String.valueOf(currentPlayer.getUpperSectionScore()));
                     
-                    if (currentPlayer.isUpperSectionBonusAwarded() && activePlayerColumn.get(7).getText().equals(GameConstants.SCORE_PLACEHOLDER)) {
-                        activePlayerColumn.get(7).setText("35");
+                    if (currentPlayer.isUpperSectionBonusAwarded()) {
+                        activePlayerColumn.get(7).setText(String.valueOf(GameConstants.UPPER_SECTION_BONUS_POINTS));
+                    } else if (gameController.isUpperSectionComplete(currentPlayer)) {
+                        activePlayerColumn.get(7).setText("0");
                     }
                     
                     activePlayerColumn.get(16).setText(String.valueOf(currentPlayer.getLowerSectionScore()));
@@ -196,6 +212,10 @@ public class ScoreCellHandler {
                     
                     // Check if the game is finished.
                     if (gameController.isGameFinished()) {
+                        rollButton.setDisable(true);
+                        dicePanel.setCheckboxesDisabled(true);
+                        dicePanel.setFocusedDieIndex(-1);
+                        scoreboardController.clearKeyboardFocus();
                         GameEndDialog endDialog = new GameEndDialog(
                             primaryStage, themeController, soundController, statisticsController, gameController, onGameEnd);
                         endDialog.handleGameEnd(statusLabel);
@@ -213,10 +233,13 @@ public class ScoreCellHandler {
                     // Highlight the new active player.
                     scoreboardController.highlightPlayer(activePlayerIndex.get());
                     
-                    rollCounterLabel.setText("0/3");
+                    rollCounterLabel.setText(GameConstants.rollCounterText(0));
                     int playerNum = activePlayerIndex.get() + 1;
                     String playerName = gameController.getPlayers().get(activePlayerIndex.get()).getPlayerName();
-                    statusLabel.setText(playerNum + ". mängija - " + playerName + " kord!\n\nVeereta täringuid alustamiseks!");
+                    String turnText = playerNum + ". mängija - " + playerName + " kord!\n\nVeereta täringuid alustamiseks!";
+                    statusLabel.setText(yahtzeeBonus
+                        ? currentPlayer.getPlayerName() + ": " + GameConstants.MSG_YAHTZEE_BONUS + "\n\n" + turnText
+                        : turnText);
                     diceValues.clear();
                     dicePanel.updateDiceImages(List.of(1, 1, 1, 1, 1));
                     dicePanel.resetCheckboxes(); // Reset for new player turn
@@ -296,7 +319,7 @@ public class ScoreCellHandler {
                     }
                     // Unused combinations - restore default green/light background
                     else {
-                        scoreCell.setStyle(themeController.getScoreCellDefaultStyle());
+                        scoreCell.setStyle(themeController.getScoreCellDefaultStyle() + themeController.getLabelTextFill());
                     }
                 });
             }

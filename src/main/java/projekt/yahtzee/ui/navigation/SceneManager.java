@@ -3,11 +3,12 @@ package projekt.yahtzee.ui.navigation;
 import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
-import javafx.scene.control.TextField;
+
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import projekt.yahtzee.controller.data.StatisticsController;
 import projekt.yahtzee.controller.game.GameController;
+import projekt.yahtzee.controller.game.GameSetup;
 import projekt.yahtzee.controller.ui.SoundController;
 import projekt.yahtzee.controller.ui.ThemeController;
 import projekt.yahtzee.ui.handlers.UIHelper;
@@ -16,7 +17,6 @@ import projekt.yahtzee.ui.scenes.GameSetupScene;
 import projekt.yahtzee.ui.scenes.MainMenuScene;
 import projekt.yahtzee.util.GameConstants;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -76,7 +76,7 @@ public class SceneManager {
      * @param onStartGame  callback invoked when the game is ready to start
      * @param onBackToMenu callback invoked when the user navigates back
      */
-    public void showSetupScene(Consumer<List<TextField>> onStartGame, Runnable onBackToMenu) {
+    public void showSetupScene(Consumer<GameSetup> onStartGame, Runnable onBackToMenu) {
         if (gameSetupScene == null) {
             gameSetupScene = new GameSetupScene(themeController, soundController);
         }
@@ -90,12 +90,12 @@ public class SceneManager {
      * Shows the game board scene and sizes the stage to the primary screen.
      *
      * @param gameController controller managing game logic
-     * @param playerFields   list of player name input fields
+     * @param setup          player names and rule choice from the setup screen
      * @param onGameExit     callback invoked when the user exits the game
      */
-    public void showGameBoard(GameController gameController, List<TextField> playerFields, Runnable onGameExit) {
+    public void showGameBoard(GameController gameController, GameSetup setup, Runnable onGameExit) {
         GameBoardScene gameBoardScene = new GameBoardScene(gameController, themeController, soundController, statisticsController);
-        Scene gameScene = gameBoardScene.createGameBoardScene(stage, playerFields, onGameExit);
+        Scene gameScene = gameBoardScene.createGameBoardScene(stage, setup, onGameExit);
         UIHelper.addFullscreenToggle(gameScene, stage);
 
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();

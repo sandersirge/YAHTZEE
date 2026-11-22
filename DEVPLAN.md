@@ -1,5 +1,5 @@
 
-> **Baseline**: Yahtzee v2.0 (JavaFX Enhanced) — Java 21, JavaFX 21, Gradle 8.5, JPMS, jlink distribution.  
+> **Baseline**: Yahtzee v2.0 (JavaFX Enhanced) — Java 21, JavaFX 21, Gradle 9.9, JPMS, jlink distribution.  
 > **Last audited**: 2026-04-04  
 > **Tracks**: 0 — Housekeeping · 1 — Docker · 2 — CI/CD · 3 — Web Version
 
@@ -37,12 +37,12 @@
 | G-02 | `module-info.java`           | Only `projekt.yahtzee` opened/exported; sub-packages unreachable via reflection                                                               | High     | ✅ FIXED                   |
 | G-03 | `GameConstants.java:188`     | `getTitleFont()` / `getCellFont()` etc. instantiate `javafx.scene.text.Font` — requires live JavaFX toolkit; blocks unit testing of constants | High     | ✅ FIXED → `UIFonts.java`  |
 | G-04 | `ResultsFileManager.java:30` | `new FileWriter(file, true)` without explicit `StandardCharsets.UTF_8` arg                                                                    | Medium   | ✅ FIXED                   |
-| G-05 | `Player.java:103`            | `getUsedCombos()` returns live `int[]` — mutation by callers corrupts state                                                                   | Medium   | ⬜ TODO                    |
+| G-05 | `Player.java:103`            | `getUsedCombos()` returns live `int[]` — mutation by callers corrupts state                                                                   | Medium   | ✅ FIXED                   |
 | G-06 | `build.gradle:48`            | `${buildDir}` is deprecated since Gradle 7; use `layout.buildDirectory`                                                                       | Medium   | ✅ FIXED                   |
 | G-07 | `GameConstants.java:149,152` | `MAX_ROLLS_PER_TURN` and `MAX_ROLLS` are identical duplicate constants                                                                        | Low      | ✅ FIXED                   |
 | G-08 | `ThemeController.java`       | ~310 lines of CSS strings in Java; no `.css` stylesheet files                                                                                 | Low      | ⬜ Optional                |
 | G-09 | `GameConstants.java:72`      | `FONT_FAMILY = "Comfortaa"` — font not bundled as resource; silently falls back                                                               | Low      | ⬜ TODO                    |
-| G-10 | `GameConstants.java:158–160` | Data files written to CWD (`settings.txt`, etc.) — breaks in Docker / packaged installs                                                       | Low      | ⬜ TODO                    |
+| G-10 | `GameConstants.java:158–160` | Data files written to CWD (`settings.txt`, etc.) — breaks in Docker / packaged installs                                                       | Low      | ✅ FIXED → `DataPaths.java` |
 | G-11 | `build.gradle`               | No Checkstyle, SpotBugs, or Javadoc tasks                                                                                                     | Low      | ⚠️ Javadoc added          |
 | G-12 | Root                         | No `.gitignore` found                                                                                                                         | Low      | ✅ FIXED (already existed) |
 
@@ -106,7 +106,7 @@ Eliminate all identified gaps, establish a testing baseline, and put every contr
 
 #### 0.3 — Fix G-05: Defensive copy in `Player.getUsedCombos()`
 
-- [ ] **[S]** In `Player.java`, change `getUsedCombos()` to return `Arrays.copyOf(usedCombos, usedCombos.length)`.  
+- [x] **[S]** In `Player.java`, change `getUsedCombos()` to return `Arrays.copyOf(usedCombos, usedCombos.length)`.  
   Update `GameController.saveScore()` accordingly — it currently mutates the returned array directly; replace with a dedicated `markComboUsed(int index)` method on `Player`.
 
 #### 0.4 — Fix G-04: Explicit charset in `ResultsFileManager`
@@ -141,7 +141,7 @@ Eliminate all identified gaps, establish a testing baseline, and put every contr
 
 #### 0.8 — Fix G-10: Platform-agnostic data directory
 
-- [ ] **[M]** Add `projekt.yahtzee.util.AppDataDirectory.java` with a static `resolve(String filename)` method:
+- [x] **[M]** Done as `projekt.yahtzee.util.DataPaths` (also macOS `~/Library/Application Support`, `$XDG_DATA_HOME`, and a one-time copy of old files from the working directory). Original plan: add `projekt.yahtzee.util.AppDataDirectory.java` with a static `resolve(String filename)` method:
   - Linux/Mac: `$HOME/.local/share/yahtzee/<filename>`
   - Windows: `%APPDATA%\Yahtzee\<filename>`
   - Override-able via system property `-Dyahtzee.data.dir=/custom/path` (useful for Docker volume mounts).

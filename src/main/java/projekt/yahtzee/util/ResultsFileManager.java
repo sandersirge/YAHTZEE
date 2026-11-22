@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,8 +26,18 @@ public class ResultsFileManager {
      * @param sortedPlayers players sorted by score
      */
     public static void saveResults(List<Player> sortedPlayers) {
+        saveResults(DataPaths.resultsFile(), sortedPlayers);
+    }
+
+    /**
+     * Appends a game's results to the given file.
+     *
+     * @param resultsPath   results log
+     * @param sortedPlayers players ordered by score
+     */
+    public static void saveResults(Path resultsPath, List<Player> sortedPlayers) {
         try (BufferedWriter writer = Files.newBufferedWriter(
-                Paths.get(GameConstants.RESULTS_FILE),
+                resultsPath,
                 StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE,
                 StandardOpenOption.APPEND)) {
@@ -42,7 +51,7 @@ public class ResultsFileManager {
             }
             writer.write("\n");
         } catch (IOException e) {
-            System.err.println("Failed to save results to " + GameConstants.RESULTS_FILE + ": " + e.getMessage());
+            System.err.println("Failed to save results to " + resultsPath + ": " + e.getMessage());
             e.printStackTrace(System.err);
         }
     }
@@ -54,7 +63,17 @@ public class ResultsFileManager {
      * @throws IOException if the file cannot be read
      */
     public static List<String> loadResults() throws IOException {
-        Path resultsPath = Paths.get(GameConstants.RESULTS_FILE);
+        return loadResults(DataPaths.resultsFile());
+    }
+
+    /**
+     * Reads the results log.
+     *
+     * @param resultsPath results log
+     * @return its lines
+     * @throws IOException if it cannot be read
+     */
+    public static List<String> loadResults(Path resultsPath) throws IOException {
         return Files.readAllLines(resultsPath, StandardCharsets.UTF_8);
     }
 }

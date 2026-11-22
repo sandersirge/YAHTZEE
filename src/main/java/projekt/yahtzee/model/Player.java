@@ -15,6 +15,8 @@ public class Player implements Comparable<Player> {
     private final String playerName;
     private int totalScore;
     private int[] usedCombos;
+    private final int[] comboScores = new int[13];
+    private int yahtzeeBonusCount;
     private int upperSectionScore;
     private int lowerSectionScore;
     private boolean upperSectionBonusAwarded;
@@ -89,10 +91,57 @@ public class Player implements Comparable<Player> {
      * Gets the array tracking which combinations have been used.
      * Index corresponds to combination index, value 0 means unused, 1 means used.
      * 
-     * @return the used combinations tracking array
+     * @return a copy of the used combinations tracking array
      */
     public int[] getUsedCombos() {
-        return usedCombos;
+        return usedCombos.clone();
+    }
+
+    /**
+     * Tells whether a category has been scored.
+     *
+     * @param index category index (0-12)
+     * @return true if it is filled
+     */
+    public boolean isComboUsed(int index) {
+        return usedCombos[index] != 0;
+    }
+
+    /**
+     * Records the points written into a category and marks it used.
+     *
+     * @param index  category index (0-12)
+     * @param points points written into it
+     */
+    public void markComboUsed(int index, int points) {
+        usedCombos[index] = 1;
+        comboScores[index] = points;
+    }
+
+    /**
+     * Points written into a category (0 if it is still open).
+     *
+     * @param index category index (0-12)
+     * @return the points
+     */
+    public int getComboScore(int index) {
+        return comboScores[index];
+    }
+
+    /**
+     * Number of Yahtzee bonuses earned (extra Yahtzees while the Yahtzee box holds 50).
+     *
+     * @return bonus count
+     */
+    public int getYahtzeeBonusCount() {
+        return yahtzeeBonusCount;
+    }
+
+    /**
+     * Counts one more Yahtzee bonus. The points themselves are added by the caller.
+     */
+    public void addYahtzeeBonus() {
+        yahtzeeBonusCount++;
     }
     
     /**
@@ -101,7 +150,7 @@ public class Player implements Comparable<Player> {
      * @param newUsed the new tracking array
      */
     public void setUsedCombos(int[] newUsed) {
-        this.usedCombos = newUsed;
+        this.usedCombos = newUsed.clone();
     }
 
     /**

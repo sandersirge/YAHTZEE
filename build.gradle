@@ -3,8 +3,8 @@ plugins {
     id 'application'
 }
 
-group 'projekt'
-version '1.1.0'
+group = 'projekt'
+version = '1.2.0'
 
 repositories {
     mavenCentral()
@@ -12,21 +12,22 @@ repositories {
 
 ext {
     junitVersion = '6.0.3'
-    javafxVersion = '21.0.2'
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    javafxVersion = '21.0.13'
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    // Java 21 bytecode and API, whichever newer JDK runs the build.
+    options.release = 21
 }
+
+// JavaFX loads its native libraries itself; newer JDKs warn unless this is allowed.
+def nativeAccess = '--enable-native-access=javafx.graphics,javafx.media'
 
 application {
     mainModule = 'projekt.yahtzee'
     mainClass = 'projekt.yahtzee.YahtzeeApplication'
+    applicationDefaultJvmArgs = [nativeAccess]
 }
 
 // Detect platform for JavaFX classifier.
@@ -64,7 +65,6 @@ javadoc {
 }
 
 // Custom jlink task replacing the beryx jlink plugin.
-// Custom jlink task replacing the beryx jlink plugin.
 tasks.register('jlink', Exec) {
     description = 'Creates a custom JDK runtime image with jlink'
     group = 'distribution'
@@ -92,6 +92,7 @@ tasks.register('jlink', Exec) {
                 '--compress', 'zip-9',
                 '--no-header-files',
                 '--no-man-pages',
+                "--add-options=${nativeAccess}",
                 '--launcher', 'app=projekt.yahtzee/projekt.yahtzee.YahtzeeApplication'
     }
 }

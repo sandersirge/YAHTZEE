@@ -4,6 +4,10 @@ import projekt.yahtzee.model.Player;
 import projekt.yahtzee.model.Die;
 import projekt.yahtzee.model.combos.Combination;
 import projekt.yahtzee.model.combos.CombinationRegistry;
+import projekt.yahtzee.model.combos.FullHouse;
+import projekt.yahtzee.model.combos.LargeStraight;
+import projekt.yahtzee.model.combos.SmallStraight;
+import projekt.yahtzee.util.GameConstants;
 
 import java.util.*;
 
@@ -13,7 +17,7 @@ import java.util.*;
  * Does not contain any UI logic - that's handled by the JavaFX components.
  * 
  * @author sandersirge
- * @version 1.1.0
+ * @version 1.2.0
  */
 public class GameController {
     private final List<Player> players;
@@ -21,6 +25,10 @@ public class GameController {
     private final CombinationRegistry registry;
     private int currentPlayerIndex;
     private int currentRollCount;
+    private boolean extraRules;
+
+    /** Index of the Yahtzee box in the registry. */
+    public static final int YAHTZEE_INDEX = 11;
     
     /**
      * Constructs a new game manager.
@@ -131,74 +139,204 @@ public class GameController {
     
     /**
      * Calculates and returns possible scores for all combinations.
-     * Returns "/" for invalid combinations and actual points for valid ones.
-     * 
+     * Returns "/" for combinations the dice do not make (choosing one scratches it for 0),
+     * the points for valid ones, and {@code null} for boxes that are used or, under the
+     * Joker rule, not allowed this turn.
+     *
      * @param values current dice values
      * @param usedCombos array tracking which combos are already used
      * @return array of strings showing possible scores
      */
     public String[] calculatePossibleScores(List<Integer> values, int[] usedCombos) {
-        // Values are already sorted from rollDice(), no need to sort again
         String[] scores = new String[13];
         List<Combination> combos = registry.getAllCombos();
-        
+        boolean joker = !players.isEmpty() && isJoker(values);
+
         for (int i = 0; i < combos.size(); i++) {
-            if (usedCombos[i] == 0) {
-                Combination combo = combos.get(i);
-                if (combo.isPossible(values)) {
-                    scores[i] = String.valueOf(combo.calculatePoints(values));
-                } else {
-                    scores[i] = "/";
-                }
+            if (usedCombos[i] != 0 || (joker && !isAllowed(i, values))) {
+                scores[i] = null;
+                continue;
+            }
+            Combination combo = combos.get(i);
+            if (joker || combo.isPossible(values)) {
+                scores[i] = String.valueOf(pointsFor(i, values));
             } else {
-                scores[i] = null; // Already used
+                scores[i] = "/";
             }
         }
-        
         return scores;
     }
-    
+
+    /**
+     * Turns the official extra rules (Yahtzee bonus and Joker rule) on or off.
+     *
+     * @param extraRules true to play with them
+     */
+    public void setExtraRules(boolean extraRules) {
+        this.extraRules = extraRules;
+    }
+
+    /**
+     * @return true if the Yahtzee bonus and Joker rule are on
+     */
+    public boolean isExtraRules() {
+        return extraRules;
+    }
+
+    /**
+     * Joker rule: with extra rules on, a Yahtzee rolled after the Yahtzee box is filled
+     * (with 50 or 0) is a joker for the current player.
+     *
+     * @param values current dice values
+     * @return true if these dice are a joker
+     */
+    public boolean isJoker(List<Integer> values) {
+        return extraRules
+            && values.size() == GameConstants.DICE_COUNT
+            && values.getFirst() > 0
+            && registry.getComboByIndex(YAHTZEE_INDEX).isPossible(values)
+            && getCurrentPlayer().isComboUsed(YAHTZEE_INDEX);
+    }
+
+    /**
+     * Yahtzee bonus: a joker earns +100 when the Yahtzee box holds 50 (not when it was
+     * scratched for 0).
+     *
+     * @param values current dice values
+     * @return true if scoring these dice earns the bonus
+     */
+    public boolean earnsYahtzeeBonus(List<Integer> values) {
+        return isJoker(values) && getCurrentPlayer().getComboScore(YAHTZEE_INDEX) == GameConstants.YAHTZEE_POINTS;
+    }
+
+    /**
+     * Points the current player would get in a box. A joker scores full points in Full House
+     * (25) and the straights (30, 40) even though the dice are not a straight.
+     *
+     * @param comboIndex box index (0-12)
+     * @param values     current dice values
+     * @return the points
+     */
+    public int pointsFor(int comboIndex, List<Integer> values) {
+        Combination combo = registry.getComboByIndex(comboIndex);
+        if (!isJoker(values)) {
+            return combo.calculatePoints(values);
+        }
+        return switch (combo) {
+            case FullHouse ignored -> 25;
+            case SmallStraight ignored -> 30;
+            case LargeStraight ignored -> 40;
+            default -> combo.calculatePoints(values);
+        };
+    }
+
+    /**
+     * Tells whether the current player may write these dice into a box. Without a joker any
+     * open box is allowed. With a joker the official order applies: the matching upper box if
+     * it is open; otherwise any open lower box; only when all lower boxes are full, an upper
+     * box (for 0).
+     *
+     * @param comboIndex box index (0-12)
+     * @param values     current dice values
+     * @return true if the box may be chosen
+     */
+    public boolean isAllowed(int comboIndex, List<Integer> values) {
+        Player player = getCurrentPlayer();
+        if (comboIndex < 0 || comboIndex >= registry.getAllCombos().size() || player.isComboUsed(comboIndex)) {
+            return false;
+        }
+        if (!isJoker(values)) {
+            return true;
+        }
+        int matchingUpper = values.getFirst() - 1;
+        if (!player.isComboUsed(matchingUpper)) {
+            return comboIndex == matchingUpper;
+        }
+        return anyLowerOpen(player) != registry.isUpperSection(comboIndex);
+    }
+
+    private boolean anyLowerOpen(Player player) {
+        for (int i = 6; i < registry.getAllCombos().size(); i++) {
+            if (!player.isComboUsed(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Explains where a joker must go, for the status line.
+     *
+     * @param values current dice values
+     * @return a short hint, or an empty string when the dice are not a joker
+     */
+    public String jokerHint(List<Integer> values) {
+        if (!isJoker(values)) {
+            return "";
+        }
+        Player player = getCurrentPlayer();
+        int matchingUpper = values.getFirst() - 1;
+        if (!player.isComboUsed(matchingUpper)) {
+            return GameConstants.MSG_JOKER_UPPER + GameConstants.UPPER_BOX_NAMES[matchingUpper];
+        }
+        return anyLowerOpen(player) ? GameConstants.MSG_JOKER_LOWER : GameConstants.MSG_JOKER_SCRATCH;
+    }
+
     /**
      * Saves the chosen combination and updates player score.
-     * Also checks and awards upper section bonus if applicable.
-     * 
+     * Also awards the upper section bonus (35 at 63 points) and, with extra rules on, the
+     * Yahtzee bonus (+100, counted in the lower section).
+     *
      * @param comboIndex the index of the chosen combination
      * @param values current dice values
-     * @return the points earned from this combination
+     * @return the points earned from this combination (without the Yahtzee bonus)
      */
     public int saveScore(int comboIndex, List<Integer> values) {
-        // Values are already sorted from rollDice()
         Player player = getCurrentPlayer();
         Combination chosen = registry.getComboByIndex(comboIndex);
-        int points = chosen.calculatePoints(values);
-        
-        // Mark combination as used
-        int[] usedCombos = player.getUsedCombos();
-        usedCombos[comboIndex] = 1;
-        player.setUsedCombos(usedCombos);
-        
-        // Add to player's history
+        boolean yahtzeeBonus = earnsYahtzeeBonus(values);
+        int points = pointsFor(comboIndex, values);
+
+        player.markComboUsed(comboIndex, points);
         player.addRolledCombo(chosen.getComboName(), points);
-        
-        // Update section scores
+
         if (registry.isUpperSection(comboIndex)) {
             player.setUpperSectionScore(player.getUpperSectionScore() + points);
         } else {
             player.setLowerSectionScore(player.getLowerSectionScore() + points);
         }
-        
-        // Update total score
         player.setTotalScore(player.getTotalScore() + points);
-        
-        // Check for upper section bonus (63+ points = 35 bonus)
-        if (!player.isUpperSectionBonusAwarded() && player.getUpperSectionScore() >= 63) {
-            player.setTotalScore(player.getTotalScore() + 35);
+
+        if (yahtzeeBonus) {
+            player.addYahtzeeBonus();
+            player.setLowerSectionScore(player.getLowerSectionScore() + GameConstants.YAHTZEE_BONUS_POINTS);
+            player.setTotalScore(player.getTotalScore() + GameConstants.YAHTZEE_BONUS_POINTS);
+        }
+
+        if (!player.isUpperSectionBonusAwarded()
+                && player.getUpperSectionScore() >= GameConstants.UPPER_SECTION_BONUS_THRESHOLD) {
+            player.setTotalScore(player.getTotalScore() + GameConstants.UPPER_SECTION_BONUS_POINTS);
             player.setUpperSectionBonusAwarded(true);
         }
-        
+
         return points;
     }
-    
+
+    /**
+     * Tells whether all six upper boxes of a player are filled.
+     *
+     * @param player the player
+     * @return true when the upper section is complete
+     */
+    public boolean isUpperSectionComplete(Player player) {
+        for (int i = 0; i < 6; i++) {
+            if (!player.isComboUsed(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Advances to the next player's turn.
      * Resets roll count for the new turn.
