@@ -92,7 +92,9 @@ tasks.register('jlink', Exec) {
                 '--compress', 'zip-9',
                 '--no-header-files',
                 '--no-man-pages',
-                "--add-options=${nativeAccess}",
+                // jlink 21 needs the value as a separate argument; newer jlink refuses a separate
+                // value that starts with "--". Leading with a -D property satisfies both.
+                '--add-options', "-Dyahtzee.launcher=jlink ${nativeAccess}",
                 '--launcher', 'app=projekt.yahtzee/projekt.yahtzee.YahtzeeApplication'
     }
 }
