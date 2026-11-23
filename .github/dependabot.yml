@@ -5,6 +5,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # Stay on the JavaFX 21 LTS line, which matches the Java 21 target. JavaFX 24+ needs a
+      # newer JDK at runtime; move the target and JavaFX together when that changes.
+      - dependency-name: "org.openjfx:*"
+        versions: [">=22"]
+
   # Keep the workflow actions current too (they were several majors behind).
   - package-ecosystem: github-actions
     directory: "/"
